@@ -1,5 +1,6 @@
 import CachingDemoCard from '@/components/CachingDemoCard'
 import PubSubDemoCard from '@/components/PubSubDemoCard'
+import RateLimitDemoCard from '@/components/RateLimitDemoCard'
 import PlaceholderCard from '@/components/PlaceholderCard'
 
 export default function Home() {
@@ -13,11 +14,7 @@ export default function Home() {
       <div className="cards-grid">
         <CachingDemoCard />
         <PubSubDemoCard />
-        <PlaceholderCard
-          title="Rate Limiting"
-          description="Implement rate limiting with Redis to control API usage"
-          comingSoon
-        />
+        <RateLimitDemoCard />
         <PlaceholderCard
           title="Session Management"
           description="Store and manage user sessions with Redis"

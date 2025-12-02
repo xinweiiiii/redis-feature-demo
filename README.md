@@ -25,8 +25,14 @@ Each Redis feature is presented in its own interactive card for easy exploration
 - Message history with timestamps
 - Shows subscriber count for published messages
 
-#### 3. Rate Limiting (Coming Soon)
-API rate limiting implementation examples
+#### 3. Rate Limiting (Active)
+- API request throttling using Redis INCR
+- Configurable request limits and time windows
+- Visual counter showing request usage
+- Progress bar with color-coded status (green/red)
+- Auto-reset timer with countdown
+- Request history log with allowed/denied status
+- Throttle warning when limit exceeded
 
 #### 4. Session Management (Coming Soon)
 User session storage and management patterns
@@ -122,6 +128,27 @@ npm run dev
 3. In Window 2: Publish a message to "notifications" channel
 4. Watch the message appear instantly in Window 1!
 
+### Rate Limiting
+**Configuration:**
+- Set an identifier (e.g., "user:123" or an IP address)
+- Configure max requests (e.g., 5)
+- Set time window in seconds (e.g., 10)
+
+**Testing:**
+1. Click "Make API Request" multiple times
+2. Watch the counter increase and progress bar fill up
+3. Visual feedback changes from green to red when throttled
+4. See the countdown timer showing when the limit resets
+5. View the request history showing allowed/denied requests
+6. Click "Reset Rate Limit" to clear the counter manually
+
+**What Happens:**
+- Each request increments a Redis counter using `INCR`
+- First request sets an expiration time using `EXPIRE`
+- Subsequent requests check if limit is exceeded
+- Counter automatically resets after the time window expires
+- Real-time countdown shows remaining time until reset
+
 ## Project Structure
 
 ```
@@ -133,9 +160,13 @@ npm run dev
 │   │   │   ├── list/
 │   │   │   ├── set/
 │   │   │   └── sortedset/
-│   │   └── pubsub/             # Pub/Sub API routes
-│   │       ├── publish/
-│   │       └── subscribe/
+│   │   ├── pubsub/             # Pub/Sub API routes
+│   │   │   ├── publish/
+│   │   │   └── subscribe/
+│   │   └── ratelimit/          # Rate Limiting API routes
+│   │       ├── check/
+│   │       ├── reset/
+│   │       └── status/
 │   ├── globals.css             # Global styles
 │   ├── layout.tsx              # Root layout
 │   └── page.tsx                # Home page with demo cards
@@ -144,6 +175,8 @@ npm run dev
 │   ├── CachingDemoModal.tsx    # Caching demo modal
 │   ├── PubSubDemoCard.tsx      # Pub/Sub demo card
 │   ├── PubSubDemoModal.tsx     # Pub/Sub demo modal
+│   ├── RateLimitDemoCard.tsx   # Rate Limiting demo card
+│   ├── RateLimitDemoModal.tsx  # Rate Limiting demo modal
 │   └── PlaceholderCard.tsx     # Placeholder for upcoming demos
 ├── lib/
 │   └── redis.ts                # Redis client configuration
@@ -167,6 +200,11 @@ npm run dev
 ### Pub/Sub
 - `POST /api/pubsub/publish` - Publish message to channel
 - `GET /api/pubsub/subscribe?channels=<channel1,channel2>` - Subscribe to channels (SSE)
+
+### Rate Limiting
+- `POST /api/ratelimit/check` - Check and increment rate limit counter
+- `POST /api/ratelimit/reset` - Reset rate limit for identifier
+- `GET /api/ratelimit/status?identifier=<id>` - Get current rate limit status
 
 ## Building for Production
 
