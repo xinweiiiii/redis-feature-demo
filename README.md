@@ -17,8 +17,13 @@ Each Redis feature is presented in its own interactive card for easy exploration
 - Real-time performance metrics showing execution time
 - Interactive write and read operations
 
-#### 2. Pub/Sub Messaging (Coming Soon)
-Real-time message publishing and subscription demonstrations
+#### 2. Pub/Sub Messaging (Active)
+- Real-time message publishing and subscription
+- Multi-channel support
+- Live message updates using Server-Sent Events
+- Publisher and Subscriber interfaces
+- Message history with timestamps
+- Shows subscriber count for published messages
 
 #### 3. Rate Limiting (Coming Soon)
 API rate limiting implementation examples
@@ -97,28 +102,57 @@ npm run dev
 - Click "Write Sorted Set" to add a member with score
 - Click "Read Sorted Set" to retrieve all members with scores
 
+### Pub/Sub Messaging
+**Publisher:**
+- Enter a channel name (e.g., "notifications")
+- Type your message
+- Click "Publish Message" to send
+- See how many subscribers received the message
+
+**Subscriber:**
+- Enter channel names separated by commas (e.g., "notifications,updates")
+- Click "Subscribe" to start listening
+- Messages appear in real-time with timestamps
+- Click "Unsubscribe" to stop receiving messages
+- Use "Clear Messages" to reset the message history
+
+**Testing Pub/Sub:**
+1. Open the demo in two browser windows
+2. In Window 1: Subscribe to "notifications" channel
+3. In Window 2: Publish a message to "notifications" channel
+4. Watch the message appear instantly in Window 1!
+
 ## Project Structure
 
 ```
 ├── app/
-│   ├── api/cache/          # API routes for Redis operations
-│   │   ├── string/
-│   │   ├── hash/
-│   │   ├── list/
-│   │   ├── set/
-│   │   └── sortedset/
-│   ├── globals.css         # Global styles
-│   ├── layout.tsx          # Root layout
-│   └── page.tsx            # Home page
+│   ├── api/
+│   │   ├── cache/              # Caching API routes
+│   │   │   ├── string/
+│   │   │   ├── hash/
+│   │   │   ├── list/
+│   │   │   ├── set/
+│   │   │   └── sortedset/
+│   │   └── pubsub/             # Pub/Sub API routes
+│   │       ├── publish/
+│   │       └── subscribe/
+│   ├── globals.css             # Global styles
+│   ├── layout.tsx              # Root layout
+│   └── page.tsx                # Home page with demo cards
 ├── components/
-│   └── CachingDemoCard.tsx # Main demo card component
+│   ├── CachingDemoCard.tsx     # Caching demo card
+│   ├── CachingDemoModal.tsx    # Caching demo modal
+│   ├── PubSubDemoCard.tsx      # Pub/Sub demo card
+│   ├── PubSubDemoModal.tsx     # Pub/Sub demo modal
+│   └── PlaceholderCard.tsx     # Placeholder for upcoming demos
 ├── lib/
-│   └── redis.ts            # Redis client configuration
+│   └── redis.ts                # Redis client configuration
 └── package.json
 ```
 
 ## API Endpoints
 
+### Caching
 - `POST /api/cache/string` - Write string
 - `GET /api/cache/string?key=<key>` - Read string
 - `POST /api/cache/hash` - Write hash
@@ -129,6 +163,10 @@ npm run dev
 - `GET /api/cache/set?key=<key>` - Read set
 - `POST /api/cache/sortedset` - Write sorted set
 - `GET /api/cache/sortedset?key=<key>` - Read sorted set
+
+### Pub/Sub
+- `POST /api/pubsub/publish` - Publish message to channel
+- `GET /api/pubsub/subscribe?channels=<channel1,channel2>` - Subscribe to channels (SSE)
 
 ## Building for Production
 

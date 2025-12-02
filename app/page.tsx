@@ -1,4 +1,5 @@
 import CachingDemoCard from '@/components/CachingDemoCard'
+import PubSubDemoCard from '@/components/PubSubDemoCard'
 import PlaceholderCard from '@/components/PlaceholderCard'
 
 export default function Home() {
@@ -11,11 +12,7 @@ export default function Home() {
 
       <div className="cards-grid">
         <CachingDemoCard />
-        <PlaceholderCard
-          title="Pub/Sub Messaging"
-          description="Real-time message publishing and subscription with Redis Pub/Sub"
-          comingSoon
-        />
+        <PubSubDemoCard />
         <PlaceholderCard
           title="Rate Limiting"
           description="Implement rate limiting with Redis to control API usage"
