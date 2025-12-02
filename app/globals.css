@@ -856,3 +856,402 @@ pre {
     grid-template-columns: 1fr;
   }
 }
+
+/* Session Management Modal Styles */
+.session-modal {
+  max-width: 1000px;
+}
+
+.session-login {
+  max-width: 500px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.session-login h3 {
+  color: #dc382d;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.login-form {
+  background: #f9f9f9;
+  padding: 2rem;
+  border-radius: 8px;
+  margin-top: 1.5rem;
+}
+
+.provider-selection {
+  margin: 1.5rem 0;
+}
+
+.provider-selection label {
+  display: block;
+  text-align: left;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.provider-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.provider-button {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: white;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.provider-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.provider-button.selected {
+  border-width: 3px;
+  box-shadow: 0 4px 12px rgba(220, 56, 45, 0.2);
+}
+
+.provider-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.login-button {
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  font-size: 1rem;
+}
+
+.session-view {
+  margin-top: 1.5rem;
+}
+
+.session-container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+}
+
+.session-panel {
+  background: #f9f9f9;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.session-panel h3 {
+  color: #dc382d;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.session-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  border: 2px solid #e0e0e0;
+  transition: box-shadow 0.2s;
+}
+
+.session-card.current {
+  border-color: #4caf50;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
+}
+
+.session-card.highlight {
+  border-color: #dc382d;
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.session-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dc382d, #ff6b6b);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.user-email {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.session-badge {
+  padding: 0.4rem 0.8rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.session-badge.google {
+  background: #e8f0fe;
+  color: #1967d2;
+}
+
+.session-badge.github {
+  background: #f0f0f0;
+  color: #333;
+}
+
+.session-badge.microsoft {
+  background: #e6f4ff;
+  color: #0078d4;
+}
+
+.session-badge.okta {
+  background: #e6f7ff;
+  color: #007dc1;
+}
+
+.session-details {
+  margin-bottom: 1.5rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-label {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.detail-value {
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.detail-value.monospace {
+  font-family: monospace;
+  font-size: 0.85rem;
+}
+
+.logout-button {
+  width: 100%;
+  padding: 0.75rem;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.logout-button:hover {
+  background: #d32f2f;
+}
+
+.sessions-list {
+  margin-top: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.no-sessions {
+  padding: 2rem;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+}
+
+.session-info-compact {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.provider-badge {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.provider-badge.google {
+  background: #4285f4;
+  color: white;
+}
+
+.provider-badge.github {
+  background: #333;
+  color: white;
+}
+
+.provider-badge.microsoft {
+  background: #00a4ef;
+  color: white;
+}
+
+.provider-badge.okta {
+  background: #007dc1;
+  color: white;
+}
+
+.session-meta {
+  flex: 1;
+}
+
+.session-id {
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.session-time {
+  font-size: 0.8rem;
+  color: #999;
+  margin-top: 0.25rem;
+}
+
+.session-ttl {
+  font-size: 0.8rem;
+  color: #ff9800;
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.terminate-button {
+  padding: 0.5rem 1rem;
+  background: #fff;
+  border: 1px solid #f44336;
+  color: #f44336;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-weight: 500;
+}
+
+.terminate-button:hover {
+  background: #f44336;
+  color: white;
+}
+
+.current-tag {
+  padding: 0.4rem 0.8rem;
+  background: #4caf50;
+  color: white;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.refresh-button {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+/* Session Countdown Timer */
+.session-countdown {
+  text-align: center;
+  padding: 1.5rem;
+  background: #e3f2fd;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  border: 2px solid transparent;
+  transition: all 0.3s;
+}
+
+.session-countdown.expiring {
+  background: #fff3e0;
+  border-color: #ff9800;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+.countdown-label {
+  font-size: 0.9rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.countdown-value {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #dc382d;
+  margin-bottom: 0.5rem;
+}
+
+.countdown-warning {
+  color: #f57c00;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+}
+
+.countdown-expired {
+  color: #f44336;
+  font-size: 1rem;
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 900px) {
+  .session-container {
+    grid-template-columns: 1fr;
+  }
+
+  .provider-buttons {
+    grid-template-columns: 1fr;
+  }
+}

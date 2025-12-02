@@ -34,8 +34,14 @@ Each Redis feature is presented in its own interactive card for easy exploration
 - Request history log with allowed/denied status
 - Throttle warning when limit exceeded
 
-#### 4. Session Management (Coming Soon)
-User session storage and management patterns
+#### 4. Session Management (Active)
+- OAuth SSO login simulation (Google, GitHub, Microsoft, Okta)
+- Session data stored as Redis hash with auto-expiration
+- Session ID generation and management
+- Multi-session support per user
+- Active sessions list with TTL tracking
+- Session termination (logout) functionality
+- User avatar and profile display
 
 ### Additional Features
 - **Performance Tracking**: Real-time metrics showing execution time for read operations
@@ -149,6 +155,39 @@ npm run dev
 - Counter automatically resets after the time window expires
 - Real-time countdown shows remaining time until reset
 
+### Session Management
+**OAuth Login:**
+- Enter your name and email
+- Select an OAuth provider (Google, GitHub, Microsoft, or Okta)
+- Click "Sign in with [Provider]" to create a session
+
+**Session Features:**
+1. View current session details (Session ID, User ID, IP, Login time, Expiration)
+2. See all active sessions for your email address
+3. Each session shows:
+   - OAuth provider badge
+   - Session ID (truncated)
+   - Login time
+   - Time remaining until expiration
+4. Terminate other sessions with "Terminate" button
+5. Logout from current session with "Logout" button
+6. Refresh sessions list to see updated TTL values
+
+**What Happens:**
+- Login creates a unique session ID (64-character hex string)
+- Session data stored in Redis hash using `HSET`
+- Session expires automatically after 30 minutes using `EXPIRE`
+- User's session IDs stored in a Redis set using `SADD`
+- Sessions can be retrieved, listed, and deleted on demand
+- Multiple concurrent sessions supported per user
+
+**Testing Multi-Session:**
+1. Login with Google
+2. Open demo in new tab/window
+3. Login with GitHub (same email)
+4. Both sessions appear in "All Active Sessions"
+5. Terminate one session from the other tab
+
 ## Project Structure
 
 ```
@@ -163,10 +202,15 @@ npm run dev
 │   │   ├── pubsub/             # Pub/Sub API routes
 │   │   │   ├── publish/
 │   │   │   └── subscribe/
-│   │   └── ratelimit/          # Rate Limiting API routes
-│   │       ├── check/
-│   │       ├── reset/
-│   │       └── status/
+│   │   ├── ratelimit/          # Rate Limiting API routes
+│   │   │   ├── check/
+│   │   │   ├── reset/
+│   │   │   └── status/
+│   │   └── session/            # Session Management API routes
+│   │       ├── login/
+│   │       ├── logout/
+│   │       ├── get/
+│   │       └── list/
 │   ├── globals.css             # Global styles
 │   ├── layout.tsx              # Root layout
 │   └── page.tsx                # Home page with demo cards
@@ -177,6 +221,8 @@ npm run dev
 │   ├── PubSubDemoModal.tsx     # Pub/Sub demo modal
 │   ├── RateLimitDemoCard.tsx   # Rate Limiting demo card
 │   ├── RateLimitDemoModal.tsx  # Rate Limiting demo modal
+│   ├── SessionDemoCard.tsx     # Session Management demo card
+│   ├── SessionDemoModal.tsx    # Session Management demo modal
 │   └── PlaceholderCard.tsx     # Placeholder for upcoming demos
 ├── lib/
 │   └── redis.ts                # Redis client configuration
@@ -205,6 +251,12 @@ npm run dev
 - `POST /api/ratelimit/check` - Check and increment rate limit counter
 - `POST /api/ratelimit/reset` - Reset rate limit for identifier
 - `GET /api/ratelimit/status?identifier=<id>` - Get current rate limit status
+
+### Session Management
+- `POST /api/session/login` - Create new session (OAuth login)
+- `GET /api/session/get?sessionId=<id>` - Get session data
+- `POST /api/session/logout` - Terminate session
+- `GET /api/session/list?email=<email>` - List all active sessions for user
 
 ## Building for Production
 

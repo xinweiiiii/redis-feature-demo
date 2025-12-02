@@ -1,7 +1,7 @@
 import CachingDemoCard from '@/components/CachingDemoCard'
 import PubSubDemoCard from '@/components/PubSubDemoCard'
 import RateLimitDemoCard from '@/components/RateLimitDemoCard'
-import PlaceholderCard from '@/components/PlaceholderCard'
+import SessionDemoCard from '@/components/SessionDemoCard'
 
 export default function Home() {
   return (
@@ -15,11 +15,7 @@ export default function Home() {
         <CachingDemoCard />
         <PubSubDemoCard />
         <RateLimitDemoCard />
-        <PlaceholderCard
-          title="Session Management"
-          description="Store and manage user sessions with Redis"
-          comingSoon
-        />
+        <SessionDemoCard />
       </div>
     </div>
   )
