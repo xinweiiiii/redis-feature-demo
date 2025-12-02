@@ -154,6 +154,35 @@ export default function SessionDemoModal({ onClose }: SessionDemoModalProps) {
     }
   };
 
+  const handleRefreshSession = async () => {
+    if (!currentSession) return;
+
+    setLoading(true);
+    setLastCommand(`HSET session:${currentSession.sessionId} expiresAt "{timestamp+30min}"\nEXPIRE session:${currentSession.sessionId} 1800\nEXPIRE user_sessions:${currentSession.email} 1800`);
+
+    try {
+      const response = await fetch('/api/session/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: currentSession.sessionId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to refresh session');
+      }
+
+      setCurrentSession(data.session);
+      setStatusMessage({ type: 'success', text: 'Session refreshed! Extended by 30 minutes.' });
+      loadActiveSessions();
+    } catch (error) {
+      setStatusMessage({ type: 'error', text: (error as Error).message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const formatTimeRemaining = (ttl: number) => {
     if (ttl <= 0) return 'Expired';
     const minutes = Math.floor(ttl / 60);
@@ -307,13 +336,22 @@ export default function SessionDemoModal({ onClose }: SessionDemoModalProps) {
                         )}
                       </div>
 
-                      <button
-                        className="logout-button"
-                        onClick={() => handleLogout()}
-                        disabled={loading}
-                      >
-                        Logout
-                      </button>
+                      <div className="session-actions">
+                        <button
+                          className="secondary refresh-button"
+                          onClick={handleRefreshSession}
+                          disabled={loading || countdown === 0}
+                        >
+                          Refresh Session
+                        </button>
+                        <button
+                          className="logout-button"
+                          onClick={() => handleLogout()}
+                          disabled={loading}
+                        >
+                          Logout
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -368,14 +406,6 @@ export default function SessionDemoModal({ onClose }: SessionDemoModalProps) {
                       ))
                     )}
                   </div>
-
-                  <button
-                    className="secondary refresh-button"
-                    onClick={loadActiveSessions}
-                    disabled={loading}
-                  >
-                    Refresh Sessions
-                  </button>
                 </div>
               </div>
             </div>

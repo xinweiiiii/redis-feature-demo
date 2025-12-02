@@ -1083,7 +1083,58 @@ pre {
   font-size: 0.85rem;
 }
 
-.logout-button {
+.session-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+.session-actions button {
+  flex: 1;
+  padding: 0.75rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+  text-align: center;
+  min-width: 0;
+}
+
+.session-actions .refresh-button {
+  background: #4caf50;
+  color: white;
+}
+
+.session-actions .refresh-button:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.session-actions .refresh-button:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.session-actions .logout-button {
+  background: #f44336;
+  color: white;
+}
+
+.session-actions .logout-button:hover:not(:disabled) {
+  background: #d32f2f;
+}
+
+.session-actions .logout-button:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Fallback for standalone logout button */
+.logout-button:not(.session-actions .logout-button) {
   width: 100%;
   padding: 0.75rem;
   background: #f44336;
@@ -1095,7 +1146,7 @@ pre {
   transition: background 0.2s;
 }
 
-.logout-button:hover {
+.logout-button:not(.session-actions .logout-button):hover {
   background: #d32f2f;
 }
 
