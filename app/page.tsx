@@ -3,6 +3,7 @@ import PubSubDemoCard from '@/components/PubSubDemoCard'
 import RateLimitDemoCard from '@/components/RateLimitDemoCard'
 import SessionDemoCard from '@/components/SessionDemoCard'
 import TimeSeriesDemoCard from '@/components/TimeSeriesDemoCard'
+import SearchDemoCard from '@/components/SearchDemoCard'
 
 export default function Home() {
   return (
@@ -18,6 +19,7 @@ export default function Home() {
         <RateLimitDemoCard />
         <SessionDemoCard />
         <TimeSeriesDemoCard />
+        <SearchDemoCard />
       </div>
     </div>
   );
