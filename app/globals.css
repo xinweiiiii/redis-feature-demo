@@ -1811,3 +1811,9 @@ pre {
     justify-content: flex-start;
   }
 }
+
+/* Stream Modal Styles */
+.stream-modal {
+  max-width: 900px;
+  max-height: 90vh;
+}

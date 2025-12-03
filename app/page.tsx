@@ -4,7 +4,7 @@ import RateLimitDemoCard from '@/components/RateLimitDemoCard'
 import SessionDemoCard from '@/components/SessionDemoCard'
 import TimeSeriesDemoCard from '@/components/TimeSeriesDemoCard'
 import SearchDemoCard from '@/components/SearchDemoCard'
-import PlaceholderCard from '@/components/PlaceholderCard'
+import StreamDemoCard from '@/components/StreamDemoCard'
 
 export default function Home() {
   return (
@@ -21,11 +21,7 @@ export default function Home() {
         <SessionDemoCard />
         <TimeSeriesDemoCard />
         <SearchDemoCard />
-        <PlaceholderCard
-          title="Redis Streams"
-          description="Build real-time event streams with Redis Streams for message queuing, event sourcing, and log aggregation"
-          comingSoon={true}
-        />
+        <StreamDemoCard />
       </div>
     </div>
   );
