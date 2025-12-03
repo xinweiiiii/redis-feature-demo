@@ -1,8 +1,8 @@
 import CachingDemoCard from '@/components/CachingDemoCard'
-import PlaceholderCard from '@/components/PlaceholderCard'
 import PubSubDemoCard from '@/components/PubSubDemoCard'
 import RateLimitDemoCard from '@/components/RateLimitDemoCard'
 import SessionDemoCard from '@/components/SessionDemoCard'
+import TimeSeriesDemoCard from '@/components/TimeSeriesDemoCard'
 
 export default function Home() {
   return (
@@ -17,11 +17,7 @@ export default function Home() {
         <PubSubDemoCard />
         <RateLimitDemoCard />
         <SessionDemoCard />
-        <PlaceholderCard
-          title="Time Series"
-          description="Track and analyze time-based data with Redis TimeSeries"
-          comingSoon={true}
-        />
+        <TimeSeriesDemoCard />
       </div>
     </div>
   );

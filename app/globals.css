@@ -1297,6 +1297,193 @@ pre {
   margin-top: 0.5rem;
 }
 
+/* Time Series Demo Styles */
+.timeseries-modal {
+  max-width: 900px;
+}
+
+.timeseries-section {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.timeseries-section:last-of-type {
+  border-bottom: none;
+}
+
+.timeseries-section h3 {
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.timeseries-section h4 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #555;
+  font-size: 1rem;
+}
+
+.sensor-selection {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.sensor-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: white;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sensor-button:hover {
+  border-color: #dc382d;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.sensor-button.selected {
+  border-color: #dc382d;
+  background: #fff5f5;
+}
+
+.sensor-icon {
+  font-size: 2rem;
+}
+
+.sensor-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.sensor-unit {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.add-datapoint-form {
+  margin-top: 1rem;
+}
+
+.input-group-horizontal {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.input-group-horizontal input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.input-group-horizontal button {
+  padding: 0.75rem 1.5rem;
+  white-space: nowrap;
+}
+
+.time-range-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: end;
+}
+
+.datapoints-display {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+}
+
+.datapoints-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.datapoint-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.datapoint-item.more {
+  justify-content: center;
+  color: #666;
+  font-style: italic;
+  border-style: dashed;
+}
+
+.datapoint-time {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.datapoint-value {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.aggregation-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  margin-top: 1rem;
+  align-items: end;
+}
+
+.aggregation-result {
+  margin-top: 1.5rem;
+}
+
+.result-card {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f9f9f9 0%, #ffffff 100%);
+  border-radius: 12px;
+  border: 2px solid #e0e0e0;
+  text-align: center;
+}
+
+.result-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #666;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.5px;
+}
+
+.result-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0.5rem 0;
+}
+
+.result-meta {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
 @media (max-width: 900px) {
   .session-container {
     grid-template-columns: 1fr;
@@ -1304,5 +1491,104 @@ pre {
 
   .provider-buttons {
     grid-template-columns: 1fr;
+  }
+
+  .sensor-selection {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .time-range-form {
+    grid-template-columns: 1fr;
+  }
+
+  .input-group-horizontal {
+    flex-direction: column;
+  }
+
+  .input-group-horizontal button {
+    width: 100%;
+  }
+
+  .aggregation-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Time Series Chart Styles */
+.timeseries-chart {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.chart-svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.chart-empty {
+  padding: 3rem;
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  background: #f9f9f9;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.chart-stats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  width: 100%;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #666;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .timeseries-chart {
+    padding: 1rem;
+  }
+
+  .chart-svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .chart-stats {
+    gap: 1rem;
+  }
+
+  .stat-item {
+    min-width: 80px;
   }
 }
