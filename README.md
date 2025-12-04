@@ -143,23 +143,6 @@ SESSION_SECRET=your_session_secret
 
 1. Make sure Redis is running:
 
-**Option 1: Redis Stack (Recommended - includes all modules)**
-```bash
-# Using Docker
-docker run -d -p 6379:6379 redis/redis-stack:latest
-
-# Or using Docker Compose (if you have a docker-compose.yml)
-docker-compose up -d
-```
-
-**Option 2: Standard Redis (basic features only)**
-```bash
-# Using Docker
-docker run -d -p 6379:6379 redis:latest
-
-# Or start your local Redis server
-redis-server
-```
 
 2. Start the development server:
 ```bash
