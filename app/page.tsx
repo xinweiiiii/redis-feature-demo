@@ -7,6 +7,7 @@ import SearchDemoCard from '@/components/SearchDemoCard'
 import StreamDemoCard from '@/components/StreamDemoCard'
 import LeaderboardDemoCard from '@/components/LeaderboardDemoCard'
 import SemanticCacheDemoCard from '@/components/SemanticCacheDemoCard'
+import PlaceholderCard from '@/components/PlaceholderCard'
 
 export default function Home() {
   return (
@@ -25,6 +26,16 @@ export default function Home() {
         <StreamDemoCard />
         <LeaderboardDemoCard />
         <SemanticCacheDemoCard />
+        <PlaceholderCard
+          title="Redis Data Integration (RDI)"
+          description="Sync data from various sources to Redis in real-time"
+          comingSoon={true}
+        />
+        <PlaceholderCard
+          title="Feature Store"
+          description="Manage and serve machine learning features with Redis"
+          comingSoon={true}
+        />
       </div>
     </div>
   );
