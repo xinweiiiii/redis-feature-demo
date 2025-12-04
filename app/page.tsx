@@ -5,6 +5,7 @@ import SessionDemoCard from '@/components/SessionDemoCard'
 import TimeSeriesDemoCard from '@/components/TimeSeriesDemoCard'
 import SearchDemoCard from '@/components/SearchDemoCard'
 import StreamDemoCard from '@/components/StreamDemoCard'
+import LeaderboardDemoCard from '@/components/LeaderboardDemoCard'
 
 export default function Home() {
   return (
@@ -22,6 +23,7 @@ export default function Home() {
         <TimeSeriesDemoCard />
         <SearchDemoCard />
         <StreamDemoCard />
+        <LeaderboardDemoCard />
       </div>
     </div>
   );
