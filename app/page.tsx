@@ -11,7 +11,6 @@ import SemanticCacheDemoCard from '@/components/SemanticCacheDemoCard'
 export default function Home() {
   return (
     <div className="container">
-      <h1>Redis Feature Demos</h1>
       <p style={{ color: "#666", marginBottom: "1rem" }}>
         Explore different Redis features with interactive demonstrations
       </p>
