@@ -24,12 +24,12 @@ export async function POST(request: NextRequest) {
 
       // Delete all user-related keys
       if (keysToDelete.length > 0) {
-        await redis.del(...keysToDelete);
+        await redis.del(keysToDelete);
       }
     }
 
     // Delete global keys
-    await redis.del('feature_store:users', 'feature_store:total_transactions');
+    await redis.del(['feature_store:users', 'feature_store:total_transactions']);
 
     return NextResponse.json({
       success: true,
