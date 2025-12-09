@@ -1,12 +1,27 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import dynamic from 'next/dynamic';
+
+const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
 interface Message {
   channel: string;
   message: string;
   timestamp: string;
   id: string;
+}
+
+interface NetworkNode {
+  id: string;
+  type: 'publisher' | 'channel' | 'subscriber';
+  label: string;
+}
+
+interface NetworkLink {
+  source: string;
+  target: string;
+  type: 'publish' | 'subscribe';
 }
 
 interface PubSubDemoModalProps {
@@ -25,6 +40,40 @@ export default function PubSubDemoModal({ onClose }: PubSubDemoModalProps) {
   const [subscriberCount, setSubscriberCount] = useState<number | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
+  // Network graph data
+  const [publishedChannels, setPublishedChannels] = useState<Set<string>>(new Set());
+  const [activeSubscriptions, setActiveSubscriptions] = useState<Set<string>>(new Set());
+
+  // Build network graph data
+  const networkData = useMemo(() => {
+    const nodes: NetworkNode[] = [];
+    const links: NetworkLink[] = [];
+
+    // Publisher node
+    nodes.push({ id: 'publisher', type: 'publisher', label: 'Publisher' });
+
+    // Subscriber node
+    nodes.push({ id: 'subscriber', type: 'subscriber', label: 'Subscriber' });
+
+    // Channel nodes
+    const allChannels = new Set([...publishedChannels, ...activeSubscriptions]);
+    allChannels.forEach(ch => {
+      nodes.push({ id: `channel_${ch}`, type: 'channel', label: ch });
+    });
+
+    // Links from publisher to channels
+    publishedChannels.forEach(ch => {
+      links.push({ source: 'publisher', target: `channel_${ch}`, type: 'publish' });
+    });
+
+    // Links from channels to subscriber
+    activeSubscriptions.forEach(ch => {
+      links.push({ source: `channel_${ch}`, target: 'subscriber', type: 'subscribe' });
+    });
+
+    return { nodes, links };
+  }, [publishedChannels, activeSubscriptions]);
+
   useEffect(() => {
     return () => {
       // Cleanup on unmount
@@ -42,6 +91,7 @@ export default function PubSubDemoModal({ onClose }: PubSubDemoModalProps) {
         eventSourceRef.current = null;
       }
       setIsSubscribed(false);
+      setActiveSubscriptions(new Set());
       setStatusMessage({ type: 'success', text: 'Unsubscribed from channels' });
       setLastCommand('');
       return;
@@ -54,6 +104,7 @@ export default function PubSubDemoModal({ onClose }: PubSubDemoModalProps) {
       return;
     }
 
+    setActiveSubscriptions(new Set(channels));
     setLastCommand(`SUBSCRIBE ${channels.join(' ')}`);
     const channelsParam = channels.join(',');
     const eventSource = new EventSource(`/api/pubsub/subscribe?channels=${channelsParam}`);
@@ -69,7 +120,7 @@ export default function PubSubDemoModal({ onClose }: PubSubDemoModalProps) {
             channel: data.channel,
             message: data.message,
             timestamp: new Date(data.timestamp).toLocaleTimeString(),
-            id: Math.random().toString(36).substr(2, 9),
+            id: Math.random().toString(36).substring(2, 11),
           };
           setMessages(prev => [newMessage, ...prev]);
         }
@@ -111,6 +162,7 @@ export default function PubSubDemoModal({ onClose }: PubSubDemoModalProps) {
       }
 
       setSubscriberCount(data.subscriberCount);
+      setPublishedChannels(prev => new Set([...prev, channel]));
       setStatusMessage({
         type: 'success',
         text: `Message published to ${data.subscriberCount} subscriber(s) in ${data.executionTime.toFixed(2)}ms`,
@@ -235,6 +287,84 @@ export default function PubSubDemoModal({ onClose }: PubSubDemoModalProps) {
               </div>
             </div>
           </div>
+
+          {/* Network Graph Visualization */}
+          {(publishedChannels.size > 0 || activeSubscriptions.size > 0) && (
+            <div className="network-graph-section">
+              <h3>Pub/Sub Network Topology</h3>
+              <p className="section-description">
+                Visualizing the relationship between publishers, channels, and subscribers
+              </p>
+              <div className="network-graph-container">
+                <ForceGraph2D
+                  graphData={networkData}
+                  nodeLabel="label"
+                  nodeColor={(node: any) => {
+                    if (node.type === 'publisher') return '#ef4444';
+                    if (node.type === 'channel') return '#3b82f6';
+                    if (node.type === 'subscriber') return '#10b981';
+                    return '#6b7280';
+                  }}
+                  nodeRelSize={8}
+                  nodeCanvasObject={(node: any, ctx, globalScale) => {
+                    const label = node.label;
+                    const fontSize = 12 / globalScale;
+                    ctx.font = `${fontSize}px Sans-Serif`;
+                    const textWidth = ctx.measureText(label).width;
+                    const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.4);
+
+                    // Draw node circle
+                    ctx.fillStyle = node.type === 'publisher' ? '#ef4444' :
+                                   node.type === 'channel' ? '#3b82f6' :
+                                   node.type === 'subscriber' ? '#10b981' : '#6b7280';
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 6, 0, 2 * Math.PI, false);
+                    ctx.fill();
+
+                    // Draw label background
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+                    ctx.fillRect(
+                      node.x - bckgDimensions[0] / 2,
+                      node.y + 10,
+                      bckgDimensions[0],
+                      bckgDimensions[1]
+                    );
+
+                    // Draw label text
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillText(label, node.x, node.y + 10 + fontSize / 2);
+                  }}
+                  linkColor={(link: any) => {
+                    return link.type === 'publish' ? '#ef4444' : '#10b981';
+                  }}
+                  linkWidth={2}
+                  linkDirectionalArrowLength={6}
+                  linkDirectionalArrowRelPos={1}
+                  linkDirectionalParticles={2}
+                  linkDirectionalParticleWidth={2}
+                  width={800}
+                  height={400}
+                  backgroundColor="var(--bg-secondary)"
+                />
+              </div>
+              <div className="network-legend">
+                <div className="legend-item">
+                  <span className="legend-color" style={{ background: '#ef4444' }}></span>
+                  <span>Publisher</span>
+                </div>
+                <div className="legend-item">
+                  <span className="legend-color" style={{ background: '#3b82f6' }}></span>
+                  <span>Channel</span>
+                </div>
+                <div className="legend-item">
+                  <span className="legend-color" style={{ background: '#10b981' }}></span>
+                  <span>Subscriber</span>
+                </div>
+              </div>
+            </div>
+          )}
 
           {lastCommand && (
             <div className="redis-command">
