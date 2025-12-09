@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 interface LeaderboardEntry {
   rank: number;
@@ -470,6 +471,44 @@ export default function LeaderboardDemoModal({ onClose }: LeaderboardDemoModalPr
                     ))}
                   </tbody>
                 </table>
+
+                {/* Bar Chart Visualization */}
+                <div style={{ marginTop: '2rem', padding: '1.5rem', background: 'white', borderRadius: '8px' }}>
+                  <h4 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>📊 Score Distribution</h4>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={leaderboard}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border-light)" />
+                      <XAxis
+                        dataKey="player"
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                        stroke="var(--text-secondary)"
+                      />
+                      <YAxis stroke="var(--text-secondary)" />
+                      <Tooltip
+                        contentStyle={{
+                          background: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-color)',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <Bar dataKey="score" radius={[8, 8, 0, 0]}>
+                        {leaderboard.map((entry, index) => (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={
+                              entry.rank === 1 ? '#fbbf24' :
+                              entry.rank === 2 ? '#d1d5db' :
+                              entry.rank === 3 ? '#f97316' :
+                              '#dc382d'
+                            }
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             ) : (
               <div style={{ padding: '2rem', textAlign: 'center', color: '#666', background: '#f5f5f5', borderRadius: '8px' }}>

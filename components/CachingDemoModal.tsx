@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface PerformanceData {
   executionTime: number;
@@ -16,6 +17,19 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [performanceData, setPerformanceData] = useState<Record<string, PerformanceData>>({});
+
+  // Track all cache operations (not just latest per type)
+  const [cacheOperations, setCacheOperations] = useState<{ fromCache: boolean }[]>([]);
+
+  // Calculate cache statistics from all operations
+  const cacheStats = useMemo(() => {
+    const hits = cacheOperations.filter(op => op.fromCache).length;
+    const misses = cacheOperations.filter(op => !op.fromCache).length;
+    const total = hits + misses;
+    const hitRate = total > 0 ? (hits / total) * 100 : 0;
+
+    return { hits, misses, total, hitRate };
+  }, [cacheOperations]);
 
   // Redis commands state
   const [lastCommand, setLastCommand] = useState<Record<string, string>>({});
@@ -88,6 +102,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
     const result = await handleApiCall(`/api/cache/string?key=${stringKey}`, 'GET');
     setStringResult(result.data);
     setPerformanceData(prev => ({ ...prev, string: result }));
+    setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
   };
 
   // Hash operations
@@ -111,6 +126,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
     const result = await handleApiCall(`/api/cache/hash?key=${hashKey}`, 'GET');
     setHashResult(result.data);
     setPerformanceData(prev => ({ ...prev, hash: result }));
+    setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
   };
 
   // List operations
@@ -134,6 +150,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
     const result = await handleApiCall(`/api/cache/list?key=${listKey}`, 'GET');
     setListResult(result.data);
     setPerformanceData(prev => ({ ...prev, list: result }));
+    setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
   };
 
   // Set operations
@@ -157,6 +174,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
     const result = await handleApiCall(`/api/cache/set?key=${setKey}`, 'GET');
     setSetResult(result.data);
     setPerformanceData(prev => ({ ...prev, set: result }));
+    setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
   };
 
   // Sorted Set operations
@@ -175,6 +193,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
     const result = await handleApiCall(`/api/cache/sortedset?key=${zsetKey}`, 'GET');
     setZsetResult(result.data);
     setPerformanceData(prev => ({ ...prev, sortedset: result }));
+    setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
   };
 
   return (
@@ -189,6 +208,62 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
           {statusMessage && (
             <div className={`status-message ${statusMessage.type}`}>
               {statusMessage.text}
+            </div>
+          )}
+
+          {/* Cache Statistics */}
+          {cacheStats.total > 0 && (
+            <div className="data-type-section" style={{ background: 'var(--bg-tertiary)', padding: '1.5rem', marginBottom: '2rem' }}>
+              <h3 style={{ marginBottom: '1rem' }}>📊 Cache Performance Statistics</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'center' }}>
+                <div>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <PieChart>
+                      <Pie
+                        data={[
+                          { name: 'Cache Hits', value: cacheStats.hits },
+                          { name: 'Cache Misses', value: cacheStats.misses }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({name, percent}) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        <Cell fill="#10b981" />
+                        <Cell fill="#ef4444" />
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div>
+                  <div className="metric" style={{ marginBottom: '0.75rem', fontSize: '1.1rem' }}>
+                    <span style={{ fontWeight: 'bold' }}>Hit Rate:</span>
+                    <span style={{
+                      color: cacheStats.hitRate >= 70 ? '#10b981' : cacheStats.hitRate >= 40 ? '#f59e0b' : '#ef4444',
+                      fontWeight: 'bold',
+                      fontSize: '1.3rem'
+                    }}>
+                      {cacheStats.hitRate.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="metric" style={{ marginBottom: '0.5rem' }}>
+                    <span>Total Requests:</span>
+                    <span style={{ fontWeight: 'bold' }}>{cacheStats.total}</span>
+                  </div>
+                  <div className="metric" style={{ marginBottom: '0.5rem' }}>
+                    <span style={{ color: '#10b981' }}>✓ Cache Hits:</span>
+                    <span style={{ fontWeight: 'bold', color: '#10b981' }}>{cacheStats.hits}</span>
+                  </div>
+                  <div className="metric">
+                    <span style={{ color: '#ef4444' }}>✗ Cache Misses:</span>
+                    <span style={{ fontWeight: 'bold', color: '#ef4444' }}>{cacheStats.misses}</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 
