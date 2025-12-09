@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from 'next/navigation';
 import { useState } from 'react';
+import ThemeToggle from './ThemeToggle';
 
 export default function Header() {
   const router = useRouter();
@@ -37,26 +38,29 @@ export default function Header() {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '1rem',
-      paddingBottom: '1rem',
-      borderBottom: '1px solid #e0e0e0'
-    }}>
-      <h1 style={{ margin: 0 }}>Redis Feature Demos</h1>
-      <button
-        onClick={handleLogout}
-        disabled={isLoggingOut}
-        className="secondary"
-        style={{
-          fontSize: '0.9rem',
-          padding: '0.5rem 1rem'
-        }}
-      >
-        {isLoggingOut ? 'Logging out...' : 'Logout'}
-      </button>
+    <div className="header">
+      <div className="header-content">
+        <div style={{ flex: 1 }}>
+          <h1>Redis Feature Demos</h1>
+          <p style={{ color: 'var(--text-secondary)', margin: 0 }}>
+            Explore different Redis features with interactive demonstrations
+          </p>
+        </div>
+        <div className="header-actions">
+          <ThemeToggle />
+          <button
+            onClick={handleLogout}
+            disabled={isLoggingOut}
+            className="secondary"
+            style={{
+              fontSize: "0.9rem",
+              padding: "0.5rem 1rem",
+            }}
+          >
+            {isLoggingOut ? "Logging out..." : "Logout"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

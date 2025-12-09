@@ -14,10 +14,6 @@ import PlaceholderCard from '@/components/PlaceholderCard'
 export default function Home() {
   return (
     <div className="container">
-      <p style={{ color: "#666", marginBottom: "1rem" }}>
-        Explore different Redis features with interactive demonstrations
-      </p>
-
       <div className="cards-grid">
         <CachingDemoCard />
         <PubSubDemoCard />

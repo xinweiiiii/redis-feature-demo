@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Header from '@/components/Header'
+import { ThemeProvider } from '@/contexts/ThemeContext'
+import { ToastProvider } from '@/contexts/ToastContext'
+import ToastContainer from '@/components/ToastContainer'
 
 export const metadata: Metadata = {
   title: 'Redis Feature Demo',
@@ -15,8 +18,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Header />
-        {children}
+        <ThemeProvider>
+          <ToastProvider>
+            <Header />
+            {children}
+            <ToastContainer />
+          </ToastProvider>
+        </ThemeProvider>
       </body>
     </html>
   )
