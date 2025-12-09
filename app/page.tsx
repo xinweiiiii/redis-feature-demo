@@ -8,6 +8,7 @@ import StreamDemoCard from '@/components/StreamDemoCard'
 import LeaderboardDemoCard from '@/components/LeaderboardDemoCard'
 import SemanticCacheDemoCard from '@/components/SemanticCacheDemoCard'
 import FeatureStoreDemoCard from '@/components/FeatureStoreDemoCard'
+import ProbabilisticDemoCard from '@/components/ProbabilisticDemoCard'
 import PlaceholderCard from '@/components/PlaceholderCard'
 
 export default function Home() {
@@ -28,6 +29,7 @@ export default function Home() {
         <LeaderboardDemoCard />
         <SemanticCacheDemoCard />
         <FeatureStoreDemoCard />
+        <ProbabilisticDemoCard />
         <PlaceholderCard
           title="Redis Data Integration (RDI)"
           description="Sync data from various sources to Redis in real-time"
