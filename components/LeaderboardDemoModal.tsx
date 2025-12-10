@@ -5,7 +5,9 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useSwipeToClose } from '@/hooks/useSwipeToClose';
 import RedisCommand from './RedisCommand';
 import CodeExamplesPanel from './CodeExamplesPanel';
+import UseCaseExplanation from './UseCaseExplanation';
 import { leaderboardExamples } from '@/lib/codeExamples';
+import { leaderboardUseCases } from '@/lib/useCases';
 
 interface LeaderboardEntry {
   rank: number;
@@ -612,6 +614,9 @@ export default function LeaderboardDemoModal({ onClose }: LeaderboardDemoModalPr
               </div>
             </div>
           )}
+
+          {/* Use Case Guide */}
+          <UseCaseExplanation data={leaderboardUseCases} defaultOpen={false} />
 
           {/* Code Examples */}
           <CodeExamplesPanel examples={leaderboardExamples} defaultOpen={false} />

@@ -5,7 +5,9 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useSwipeToClose } from '@/hooks/useSwipeToClose';
 import RedisCommand from './RedisCommand';
 import CodeExamplesPanel from './CodeExamplesPanel';
+import UseCaseExplanation from './UseCaseExplanation';
 import { cachingExamples } from '@/lib/codeExamples';
+import { cachingUseCases } from '@/lib/useCases';
 
 interface PerformanceData {
   executionTime: number;
@@ -536,6 +538,9 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
               </div>
             )}
           </div>
+
+          {/* Use Case Guide */}
+          <UseCaseExplanation data={cachingUseCases} defaultOpen={false} />
 
           {/* Code Examples */}
           <CodeExamplesPanel examples={cachingExamples} defaultOpen={false} />

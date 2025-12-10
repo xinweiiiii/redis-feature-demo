@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import TimeSeriesChart from './TimeSeriesChart';
 import { useSwipeToClose } from '@/hooks/useSwipeToClose';
 import CodeExamplesPanel from './CodeExamplesPanel';
+import UseCaseExplanation from './UseCaseExplanation';
 import { timeSeriesExamples } from '@/lib/codeExamples';
+import { timeSeriesUseCases } from '@/lib/useCases';
 
 interface DataPoint {
   timestamp: number;
@@ -360,6 +362,9 @@ export default function TimeSeriesDemoModal({ onClose }: TimeSeriesDemoModalProp
               </div>
             )}
           </div>
+
+          {/* Use Case Guide */}
+          <UseCaseExplanation data={timeSeriesUseCases} defaultOpen={false} />
 
           {/* Code Examples */}
           <CodeExamplesPanel examples={timeSeriesExamples} defaultOpen={false} />

@@ -7,7 +7,9 @@ import CollapsibleSection from './CollapsibleSection';
 import { useSwipeToClose } from '@/hooks/useSwipeToClose';
 import RedisCommand from './RedisCommand';
 import CodeExamplesPanel from './CodeExamplesPanel';
+import UseCaseExplanation from './UseCaseExplanation';
 import { geospatialExamples } from '@/lib/codeExamples';
+import { geospatialUseCases } from '@/lib/useCases';
 
 const GeoMap = dynamic(() => import('./GeoMap'), { ssr: false });
 
@@ -734,9 +736,12 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
             </div>
           )}
 
-          {/* Code Examples - Show geospatial examples when on geo tab */}
+          {/* Use Case Guide & Code Examples - Show when on geo tab */}
           {activeTab === 'geo' && (
-            <CodeExamplesPanel examples={geospatialExamples} defaultOpen={false} />
+            <>
+              <UseCaseExplanation data={geospatialUseCases} defaultOpen={false} />
+              <CodeExamplesPanel examples={geospatialExamples} defaultOpen={false} />
+            </>
           )}
         </div>
       </div>

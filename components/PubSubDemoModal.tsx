@@ -5,7 +5,9 @@ import dynamic from 'next/dynamic';
 import { useSwipeToClose } from '@/hooks/useSwipeToClose';
 import RedisCommand from './RedisCommand';
 import CodeExamplesPanel from './CodeExamplesPanel';
+import UseCaseExplanation from './UseCaseExplanation';
 import { pubsubExamples } from '@/lib/codeExamples';
+import { pubsubUseCases } from '@/lib/useCases';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
@@ -374,6 +376,9 @@ export default function PubSubDemoModal({ onClose }: PubSubDemoModalProps) {
           )}
 
           {lastCommand && <RedisCommand command={lastCommand} />}
+
+          {/* Use Case Guide */}
+          <UseCaseExplanation data={pubsubUseCases} defaultOpen={false} />
 
           {/* Code Examples */}
           <CodeExamplesPanel examples={pubsubExamples} defaultOpen={false} />

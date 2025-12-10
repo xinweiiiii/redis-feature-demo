@@ -441,3 +441,309 @@ ZADD ratelimit:user123 <timestamp> <request-id>
 ZREMRANGEBYSCORE ratelimit:user123 0 <old-timestamp>
 ZCARD ratelimit:user123`
 };
+
+export const sessionExamples = {
+  nodejs: `// Using node-redis for session management
+import { createClient } from 'redis';
+
+const client = await createClient().connect();
+
+// Create session
+const sessionId = 'session:' + crypto.randomUUID();
+await client.set(sessionId, JSON.stringify({
+  userId: '12345',
+  username: 'john_doe',
+  email: 'john@example.com',
+  loginTime: Date.now()
+}), { EX: 3600 }); // 1 hour expiration
+
+// Get session
+const sessionData = await client.get(sessionId);
+const session = JSON.parse(sessionData);
+
+// Update session
+const updated = { ...session, lastActivity: Date.now() };
+await client.set(sessionId, JSON.stringify(updated), { EX: 3600 });
+
+// Delete session (logout)
+await client.del(sessionId);`,
+
+  python: `# Using redis-py for session management
+import redis
+import json
+import uuid
+import time
+
+client = redis.Redis(host='localhost', port=6379)
+
+# Create session
+session_id = f'session:{uuid.uuid4()}'
+session_data = {
+    'userId': '12345',
+    'username': 'john_doe',
+    'email': 'john@example.com',
+    'loginTime': int(time.time())
+}
+client.setex(session_id, 3600, json.dumps(session_data))
+
+# Get session
+session_json = client.get(session_id)
+session = json.loads(session_json)
+
+# Update session
+session['lastActivity'] = int(time.time())
+client.setex(session_id, 3600, json.dumps(session))
+
+# Delete session (logout)
+client.delete(session_id)`,
+
+  cli: `# Create session with expiration
+SET session:abc123 '{"userId":"12345","username":"john_doe"}' EX 3600
+
+# Get session
+GET session:abc123
+
+# Update TTL
+EXPIRE session:abc123 3600
+
+# Delete session
+DEL session:abc123
+
+# Check if session exists
+EXISTS session:abc123`
+};
+
+export const semanticCacheExamples = {
+  nodejs: `// Semantic caching with vector embeddings
+import { createClient } from 'redis';
+
+const client = await createClient().connect();
+
+// Generate embedding (using OpenAI or similar)
+async function getEmbedding(text) {
+  // Call embedding API
+  return [0.1, 0.2, 0.3, ...]; // example vector
+}
+
+// Cache response with semantic search
+async function semanticCache(query) {
+  const embedding = await getEmbedding(query);
+
+  // Search for similar queries
+  const results = await client.ft.search(
+    'idx:semantic',
+    '*=>[KNN 1 @embedding $BLOB AS score]',
+    {
+      PARAMS: { BLOB: Buffer.from(new Float32Array(embedding).buffer) },
+      DIALECT: 2
+    }
+  );
+
+  if (results.total > 0 && results.documents[0].score < 0.1) {
+    // Cache hit - return cached response
+    return results.documents[0].value.response;
+  }
+
+  // Cache miss - get new response
+  const response = await generateResponse(query);
+
+  // Store with embedding
+  await client.json.set(\`cache:\${Date.now()}\`, '$', {
+    query,
+    response,
+    embedding
+  });
+
+  return response;
+}`,
+
+  python: `# Semantic caching with vector embeddings
+import redis
+import numpy as np
+
+client = redis.Redis(host='localhost', port=6379)
+
+def get_embedding(text):
+    # Call embedding API (OpenAI, etc.)
+    return np.array([0.1, 0.2, 0.3, ...])
+
+def semantic_cache(query):
+    embedding = get_embedding(query)
+
+    # Search for similar queries
+    results = client.ft().search(
+        '*=>[KNN 1 @embedding $BLOB AS score]',
+        query_params={'BLOB': embedding.tobytes()}
+    )
+
+    if results.total > 0 and float(results.docs[0].score) < 0.1:
+        # Cache hit
+        return results.docs[0].response
+
+    # Cache miss - generate and store
+    response = generate_response(query)
+
+    client.json().set(f'cache:{time.time()}', '$', {
+        'query': query,
+        'response': response,
+        'embedding': embedding.tolist()
+    })
+
+    return response`,
+
+  cli: `# Create vector search index
+FT.CREATE idx:semantic ON JSON PREFIX 1 cache: SCHEMA
+  $.embedding AS embedding VECTOR HNSW 6 DIM 1536 DISTANCE_METRIC COSINE
+
+# Store cached response with embedding
+JSON.SET cache:1 $ '{"query":"hello","response":"Hi there!","embedding":[...]}'
+
+# Search for similar queries
+FT.SEARCH idx:semantic "*=>[KNN 1 @embedding $BLOB]"
+  PARAMS 2 BLOB <binary_embedding> DIALECT 2`
+};
+
+export const probabilisticExamples = {
+  nodejs: `// Probabilistic data structures
+import { createClient } from 'redis';
+
+const client = await createClient().connect();
+
+// HyperLogLog - Unique visitor counting
+await client.pfAdd('visitors:2024-01-15', ['user1', 'user2', 'user3']);
+const uniqueCount = await client.pfCount('visitors:2024-01-15');
+
+// Merge multiple days
+await client.pfMerge('visitors:week', [
+  'visitors:2024-01-15',
+  'visitors:2024-01-16',
+  'visitors:2024-01-17'
+]);
+
+// Bloom Filter (using RedisBloom module)
+await client.bf.add('emails', 'user@example.com');
+const exists = await client.bf.exists('emails', 'user@example.com'); // true
+const notExists = await client.bf.exists('emails', 'other@example.com'); // probably false
+
+// Count-Min Sketch - Frequency estimation
+await client.cms.incrBy('page_views', ['home', 'about', 'contact'], [10, 5, 3]);
+const homeViews = await client.cms.query('page_views', 'home');`,
+
+  python: `# Probabilistic data structures
+import redis
+
+client = redis.Redis(host='localhost', port=6379)
+
+# HyperLogLog - Unique visitor counting
+client.pfadd('visitors:2024-01-15', 'user1', 'user2', 'user3')
+unique_count = client.pfcount('visitors:2024-01-15')
+
+# Merge multiple days
+client.pfmerge('visitors:week',
+    'visitors:2024-01-15',
+    'visitors:2024-01-16',
+    'visitors:2024-01-17'
+)
+
+# Bloom Filter (using RedisBloom module)
+client.execute_command('BF.ADD', 'emails', 'user@example.com')
+exists = client.execute_command('BF.EXISTS', 'emails', 'user@example.com')
+
+# Count-Min Sketch
+client.execute_command('CMS.INCRBY', 'page_views', 'home', 10)
+home_views = client.execute_command('CMS.QUERY', 'page_views', 'home')`,
+
+  cli: `# HyperLogLog - Unique counting
+PFADD visitors:2024-01-15 user1 user2 user3
+PFCOUNT visitors:2024-01-15
+
+# Merge HyperLogLogs
+PFMERGE visitors:week visitors:2024-01-15 visitors:2024-01-16
+
+# Bloom Filter
+BF.ADD emails user@example.com
+BF.EXISTS emails user@example.com
+
+# Count-Min Sketch
+CMS.INCRBY page_views home 10 about 5
+CMS.QUERY page_views home`
+};
+
+export const featureStoreExamples = {
+  nodejs: `// Feature store for ML models
+import { createClient } from 'redis';
+
+const client = await createClient().connect();
+
+// Store user features
+await client.json.set('features:user:12345', '$', {
+  userId: '12345',
+  features: {
+    transactionCount24h: 15,
+    avgTransactionAmount: 125.50,
+    accountAge: 730,
+    lastLoginHours: 2,
+    fraudScore: 0.05
+  },
+  timestamp: Date.now()
+});
+
+// Retrieve features for prediction
+const userFeatures = await client.json.get('features:user:12345', {
+  path: '$.features'
+});
+
+// Batch feature retrieval
+const pipeline = client.multi();
+['user:123', 'user:456', 'user:789'].forEach(key => {
+  pipeline.json.get(\`features:\${key}\`, { path: '$.features' });
+});
+const batchFeatures = await pipeline.exec();
+
+// Update specific feature
+await client.json.numIncrBy('features:user:12345', '$.features.transactionCount24h', 1);`,
+
+  python: `# Feature store for ML models
+import redis
+import json
+
+client = redis.Redis(host='localhost', port=6379)
+
+# Store user features
+features = {
+    'userId': '12345',
+    'features': {
+        'transactionCount24h': 15,
+        'avgTransactionAmount': 125.50,
+        'accountAge': 730,
+        'lastLoginHours': 2,
+        'fraudScore': 0.05
+    },
+    'timestamp': time.time()
+}
+client.json().set('features:user:12345', '$', features)
+
+# Retrieve features for prediction
+user_features = client.json().get('features:user:12345', '$.features')
+
+# Batch feature retrieval
+pipe = client.pipeline()
+for user_id in ['123', '456', '789']:
+    pipe.json().get(f'features:user:{user_id}', '$.features')
+batch_features = pipe.execute()
+
+# Update specific feature
+client.json().numincrby('features:user:12345', '$.features.transactionCount24h', 1)`,
+
+  cli: `# Store user features
+JSON.SET features:user:12345 $ '{"userId":"12345","features":{"transactionCount24h":15,"avgTransactionAmount":125.50}}'
+
+# Get features
+JSON.GET features:user:12345 $.features
+
+# Update specific feature
+JSON.NUMINCRBY features:user:12345 $.features.transactionCount24h 1
+
+# Get multiple features
+JSON.MGET features:user:123 features:user:456 $.features`
+};

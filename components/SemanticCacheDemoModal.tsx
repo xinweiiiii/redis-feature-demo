@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import CodeExamplesPanel from './CodeExamplesPanel';
+import UseCaseExplanation from './UseCaseExplanation';
+import { semanticCacheExamples } from '@/lib/codeExamples';
+import { semanticCacheUseCases } from '@/lib/useCases';
 
 interface QueryResult {
   query: string;
@@ -421,6 +425,12 @@ export default function SemanticCacheDemoModal({ onClose }: SemanticCacheDemoMod
               with different wording will trigger cache hits if they're asking the same thing!
             </div>
           </div>
+
+          {/* Use Case Guide */}
+          <UseCaseExplanation data={semanticCacheUseCases} defaultOpen={false} />
+
+          {/* Code Examples */}
+          <CodeExamplesPanel examples={semanticCacheExamples} defaultOpen={false} />
         </div>
       </div>
     </div>

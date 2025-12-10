@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import CodeExamplesPanel from './CodeExamplesPanel';
+import UseCaseExplanation from './UseCaseExplanation';
+import { rateLimitExamples } from '@/lib/codeExamples';
+import { rateLimitUseCases } from '@/lib/useCases';
 
 interface RateLimitResponse {
   allowed: boolean;
@@ -302,6 +306,12 @@ export default function RateLimitDemoModal({ onClose }: RateLimitDemoModalProps)
               </div>
             </div>
           )}
+
+          {/* Use Case Guide */}
+          <UseCaseExplanation data={rateLimitUseCases} defaultOpen={false} />
+
+          {/* Code Examples */}
+          <CodeExamplesPanel examples={rateLimitExamples} defaultOpen={false} />
         </div>
       </div>
     </div>

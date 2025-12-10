@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import CodeExamplesPanel from './CodeExamplesPanel';
+import UseCaseExplanation from './UseCaseExplanation';
+import { sessionExamples } from '@/lib/codeExamples';
+import { sessionUseCases } from '@/lib/useCases';
 
 interface Session {
   sessionId: string;
@@ -418,6 +422,12 @@ export default function SessionDemoModal({ onClose }: SessionDemoModalProps) {
               <code>{lastCommand}</code>
             </div>
           )}
+
+          {/* Use Case Guide */}
+          <UseCaseExplanation data={sessionUseCases} defaultOpen={false} />
+
+          {/* Code Examples */}
+          <CodeExamplesPanel examples={sessionExamples} defaultOpen={false} />
         </div>
       </div>
     </div>

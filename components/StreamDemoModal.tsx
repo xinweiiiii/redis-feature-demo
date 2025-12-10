@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import CodeExamplesPanel from './CodeExamplesPanel';
+import UseCaseExplanation from './UseCaseExplanation';
+import { streamExamples } from '@/lib/codeExamples';
+import { streamUseCases } from '@/lib/useCases';
 
 interface Message {
   id: string;
@@ -964,6 +968,12 @@ export default function StreamDemoModal({ onClose }: StreamDemoModalProps) {
               </div>
             </>
           )}
+
+          {/* Use Case Guide */}
+          <UseCaseExplanation data={streamUseCases} defaultOpen={false} />
+
+          {/* Code Examples */}
+          <CodeExamplesPanel examples={streamExamples} defaultOpen={false} />
         </div>
       </div>
     </div>

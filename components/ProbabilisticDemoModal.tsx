@@ -1,6 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import CodeExamplesPanel from './CodeExamplesPanel';
+import UseCaseExplanation from './UseCaseExplanation';
+import { probabilisticExamples } from '@/lib/codeExamples';
+import { probabilisticUseCases } from '@/lib/useCases';
 
 interface ProbabilisticDemoModalProps {
   onClose: () => void;
@@ -749,6 +753,12 @@ export default function ProbabilisticDemoModal({ onClose }: ProbabilisticDemoMod
               )}
             </div>
           )}
+
+          {/* Use Case Guide */}
+          <UseCaseExplanation data={probabilisticUseCases} defaultOpen={false} />
+
+          {/* Code Examples */}
+          <CodeExamplesPanel examples={probabilisticExamples} defaultOpen={false} />
         </div>
       </div>
     </div>

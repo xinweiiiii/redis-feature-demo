@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import RedisCommand from './RedisCommand';
+import CodeExamplesPanel from './CodeExamplesPanel';
+import UseCaseExplanation from './UseCaseExplanation';
+import { featureStoreExamples } from '@/lib/codeExamples';
+import { featureStoreUseCases } from '@/lib/useCases';
 
 interface UserFeatures {
   userId: string;
@@ -997,6 +1001,12 @@ export default function FeatureStoreDemoModal({ onClose }: FeatureStoreDemoModal
               )}
             </div>
           )}
+
+          {/* Use Case Guide */}
+          <UseCaseExplanation data={featureStoreUseCases} defaultOpen={false} />
+
+          {/* Code Examples */}
+          <CodeExamplesPanel examples={featureStoreExamples} defaultOpen={false} />
         </div>
       </div>
     </div>
