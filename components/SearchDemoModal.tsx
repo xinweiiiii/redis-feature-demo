@@ -1,6 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import 'leaflet/dist/leaflet.css';
+
+const GeoMap = dynamic(() => import('./GeoMap'), { ssr: false });
 
 interface SearchResult {
   id: string;
@@ -11,18 +15,36 @@ interface SearchResult {
   distance?: number;
 }
 
-interface GeoLocation {
+interface Location {
   name: string;
-  distance: number;
-  coordinates: {
-    latitude: number;
-    longitude: number;
-  };
+  latitude: number;
+  longitude: number;
+}
+
+interface SearchResult_Geo {
+  name: string;
+  latitude: number;
+  longitude: number;
+  distance?: number;
 }
 
 interface SearchDemoModalProps {
   onClose: () => void;
 }
+
+// Sample locations in Singapore
+const SAMPLE_LOCATIONS: Location[] = [
+  { name: 'Marina Bay Sands', latitude: 1.2834, longitude: 103.8607 },
+  { name: 'Changi Airport', latitude: 1.3644, longitude: 103.9915 },
+  { name: 'Sentosa Island', latitude: 1.2494, longitude: 103.8303 },
+  { name: 'Gardens by the Bay', latitude: 1.2816, longitude: 103.8636 },
+  { name: 'Singapore Zoo', latitude: 1.4043, longitude: 103.7930 },
+  { name: 'Orchard Road', latitude: 1.3048, longitude: 103.8318 },
+  { name: 'Merlion Park', latitude: 1.2868, longitude: 103.8545 },
+  { name: 'Universal Studios', latitude: 1.2540, longitude: 103.8238 },
+  { name: 'Clarke Quay', latitude: 1.2906, longitude: 103.8467 },
+  { name: 'Little India', latitude: 1.3066, longitude: 103.8518 },
+];
 
 export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
   const [loading, setLoading] = useState(false);
@@ -34,13 +56,202 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
   // Search states
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
-  const [geoResults, setGeoResults] = useState<GeoLocation[]>([]);
   const [executionTime, setExecutionTime] = useState<number | null>(null);
 
-  // Geo search params
-  const [latitude, setLatitude] = useState('37.7749');
-  const [longitude, setLongitude] = useState('-122.4194');
-  const [radius, setRadius] = useState('100');
+  // Full geospatial demo state
+  const [geoLocations, setGeoLocations] = useState<Location[]>([]);
+  const [newLocation, setNewLocation] = useState({ name: '', latitude: '', longitude: '' });
+  const [searchCenter, setSearchCenter] = useState({ latitude: '1.2905', longitude: '103.8520' });
+  const [searchRadius, setSearchRadius] = useState('5');
+  const [searchResults_Geo, setSearchResults_Geo] = useState<SearchResult_Geo[]>([]);
+  const [distanceCalc, setDistanceCalc] = useState({ from: '', to: '', result: '' });
+
+  // Load geospatial locations
+  useEffect(() => {
+    loadGeoLocations();
+  }, []);
+
+  const loadGeoLocations = async () => {
+    try {
+      const response = await fetch('/api/geospatial/list');
+      const data = await response.json();
+      if (data.locations) {
+        setGeoLocations(data.locations);
+      }
+    } catch (error) {
+      console.error('Error loading geo locations:', error);
+    }
+  };
+
+  const addGeoLocation = async () => {
+    const lat = parseFloat(newLocation.latitude);
+    const lng = parseFloat(newLocation.longitude);
+
+    if (!newLocation.name || isNaN(lat) || isNaN(lng)) {
+      setStatusMessage({ type: 'error', text: 'Please provide valid name, latitude, and longitude' });
+      return;
+    }
+
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      setStatusMessage({ type: 'error', text: 'Invalid coordinates: lat must be -90 to 90, lng must be -180 to 180' });
+      return;
+    }
+
+    setLoading(true);
+    setRedisCommand(`GEOADD locations ${lng} ${lat} "${newLocation.name}"`);
+
+    try {
+      const response = await fetch('/api/geospatial/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newLocation.name,
+          latitude: lat,
+          longitude: lng,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to add location');
+      }
+
+      setStatusMessage({
+        type: 'success',
+        text: `Added location "${newLocation.name}" in ${data.executionTime.toFixed(2)}ms`,
+      });
+      setNewLocation({ name: '', latitude: '', longitude: '' });
+      await loadGeoLocations();
+    } catch (error) {
+      setStatusMessage({ type: 'error', text: (error as Error).message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const searchNearbyLocations = async () => {
+    const lat = parseFloat(searchCenter.latitude);
+    const lng = parseFloat(searchCenter.longitude);
+    const rad = parseFloat(searchRadius);
+
+    if (isNaN(lat) || isNaN(lng) || isNaN(rad) || rad <= 0) {
+      setStatusMessage({ type: 'error', text: 'Please provide valid search coordinates and radius' });
+      return;
+    }
+
+    setLoading(true);
+    setRedisCommand(`GEOSEARCH locations FROMLONLAT ${lng} ${lat} BYRADIUS ${rad} km WITHDIST`);
+
+    try {
+      const response = await fetch('/api/geospatial/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          latitude: lat,
+          longitude: lng,
+          radius: rad,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to search locations');
+      }
+
+      setSearchResults_Geo(data.results);
+      setStatusMessage({
+        type: 'success',
+        text: `Found ${data.results.length} location(s) within ${rad}km in ${data.executionTime.toFixed(2)}ms`,
+      });
+    } catch (error) {
+      setStatusMessage({ type: 'error', text: (error as Error).message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateDistance = async () => {
+    if (!distanceCalc.from || !distanceCalc.to) {
+      setStatusMessage({ type: 'error', text: 'Please select two locations' });
+      return;
+    }
+
+    setLoading(true);
+    setRedisCommand(`GEODIST locations "${distanceCalc.from}" "${distanceCalc.to}" km`);
+
+    try {
+      const response = await fetch('/api/geospatial/distance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: distanceCalc.from,
+          to: distanceCalc.to,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to calculate distance');
+      }
+
+      setDistanceCalc(prev => ({ ...prev, result: data.distance.toFixed(2) }));
+      setStatusMessage({
+        type: 'success',
+        text: `Distance calculated in ${data.executionTime.toFixed(2)}ms`,
+      });
+    } catch (error) {
+      setStatusMessage({ type: 'error', text: (error as Error).message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSampleGeoData = async () => {
+    setLoading(true);
+    setRedisCommand('GEOADD locations (bulk loading sample data)');
+
+    try {
+      const response = await fetch('/api/geospatial/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ locations: SAMPLE_LOCATIONS }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to load sample data');
+      }
+
+      setStatusMessage({
+        type: 'success',
+        text: `Loaded ${data.count} sample locations in ${data.executionTime.toFixed(2)}ms`,
+      });
+      await loadGeoLocations();
+    } catch (error) {
+      setStatusMessage({ type: 'error', text: (error as Error).message });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const clearGeoData = async () => {
+    setLoading(true);
+    try {
+      await fetch('/api/geospatial/clear', { method: 'POST' });
+      setGeoLocations([]);
+      setSearchResults_Geo([]);
+      setStatusMessage({ type: 'success', text: 'All geospatial data cleared' });
+      setRedisCommand('DEL locations');
+    } catch (error) {
+      setStatusMessage({ type: 'error', text: (error as Error).message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const initializeData = async () => {
     setLoading(true);
@@ -91,7 +302,6 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
       if (data.success) {
         setResults(data.documents);
         setExecutionTime(data.executionTime);
-        setGeoResults([]);
         setStatusMessage({ type: 'success', text: `Found ${data.total} results` });
       } else {
         setStatusMessage({ type: 'error', text: data.error });
@@ -124,7 +334,6 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
       if (data.success) {
         setResults(data.documents);
         setExecutionTime(data.executionTime);
-        setGeoResults([]);
         setStatusMessage({ type: 'success', text: `Found ${data.total} semantically similar results` });
       } else {
         setStatusMessage({ type: 'error', text: data.error });
@@ -162,48 +371,12 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
       if (data.success) {
         setResults(data.documents);
         setExecutionTime(data.executionTime);
-        setGeoResults([]);
         setStatusMessage({ type: 'success', text: `Found ${data.total} results using hybrid search` });
       } else {
         setStatusMessage({ type: 'error', text: data.error });
       }
     } catch (error) {
       setStatusMessage({ type: 'error', text: 'Error performing search' });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const performGeoSearch = async () => {
-    setLoading(true);
-    setStatusMessage(null);
-    setRedisCommand(`GEOSEARCH locations FROMLONLAT ${longitude} ${latitude} BYRADIUS ${radius} km WITHDIST WITHCOORD`);
-
-    try {
-      const response = await fetch('/api/search/geo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          latitude: parseFloat(latitude),
-          longitude: parseFloat(longitude),
-          radius: parseFloat(radius),
-          unit: 'km',
-        }),
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        console.log('Geo API response:', data);
-        console.log('Locations received:', data.locations);
-        setGeoResults(data.locations);
-        setExecutionTime(data.executionTime);
-        setResults([]);
-        setStatusMessage({ type: 'success', text: `Found ${data.count} locations` });
-      } else {
-        setStatusMessage({ type: 'error', text: data.error });
-      }
-    } catch (error) {
-      setStatusMessage({ type: 'error', text: 'Error performing geo search' });
     } finally {
       setLoading(false);
     }
@@ -220,9 +393,7 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
       case 'hybrid':
         performHybridSearch();
         break;
-      case 'geo':
-        performGeoSearch();
-        break;
+      // Geo search is handled by searchNearbyLocations function
     }
   };
 
@@ -285,52 +456,195 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
           </div>
 
           {/* Search Form */}
-          <div className="search-section">
-            {activeTab === 'geo' ? (
-              <>
-                <h3>Geospatial Search</h3>
-                <p className="section-description">Find stores within specified radius</p>
-                <div className="geo-search-form">
-                  <div className="input-row">
-                    <div className="input-group">
-                      <label>Latitude</label>
-                      <input
-                        type="number"
-                        value={latitude}
-                        onChange={(e) => setLatitude(e.target.value)}
-                        placeholder="37.7749"
-                        disabled={loading || !initialized}
-                        step="0.0001"
-                      />
-                    </div>
-                    <div className="input-group">
-                      <label>Longitude</label>
-                      <input
-                        type="number"
-                        value={longitude}
-                        onChange={(e) => setLongitude(e.target.value)}
-                        placeholder="-122.4194"
-                        disabled={loading || !initialized}
-                        step="0.0001"
-                      />
-                    </div>
-                    <div className="input-group">
-                      <label>Radius (km)</label>
-                      <input
-                        type="number"
-                        value={radius}
-                        onChange={(e) => setRadius(e.target.value)}
-                        placeholder="100"
-                        disabled={loading || !initialized}
-                      />
-                    </div>
+          {activeTab === 'geo' ? (
+            <div className="geo-layout">
+              {/* Map Section */}
+              <div className="geo-map-section">
+                <h3>Interactive Map & Heatmap</h3>
+                <GeoMap
+                  locations={geoLocations}
+                  searchCenter={searchCenter.latitude && searchCenter.longitude ? {
+                    latitude: parseFloat(searchCenter.latitude),
+                    longitude: parseFloat(searchCenter.longitude),
+                  } : null}
+                  searchRadius={parseFloat(searchRadius)}
+                  searchResults={searchResults_Geo}
+                />
+              </div>
+
+              {/* Controls Section */}
+              <div className="geo-controls-section">
+                <div className="geo-panel">
+                  <h3>Add Location</h3>
+                  <div className="input-group">
+                    <label>Location Name</label>
+                    <input
+                      type="text"
+                      value={newLocation.name}
+                      onChange={(e) => setNewLocation(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="e.g., Marina Bay Sands"
+                      disabled={loading}
+                    />
                   </div>
-                  <button className="primary" onClick={handleSearch} disabled={loading || !initialized}>
-                    {loading ? 'Searching...' : 'Search Locations'}
+                  <div className="input-group">
+                    <label>Latitude (-90 to 90)</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={newLocation.latitude}
+                      onChange={(e) => setNewLocation(prev => ({ ...prev, latitude: e.target.value }))}
+                      placeholder="1.2905"
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label>Longitude (-180 to 180)</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={newLocation.longitude}
+                      onChange={(e) => setNewLocation(prev => ({ ...prev, longitude: e.target.value }))}
+                      placeholder="103.8520"
+                      disabled={loading}
+                    />
+                  </div>
+                  <button className="primary" onClick={addGeoLocation} disabled={loading}>
+                    Add Location
                   </button>
                 </div>
-              </>
-            ) : (
+
+                <div className="geo-panel">
+                  <h3>Search Nearby</h3>
+                  <div className="input-group">
+                    <label>Center Latitude</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={searchCenter.latitude}
+                      onChange={(e) => setSearchCenter(prev => ({ ...prev, latitude: e.target.value }))}
+                      placeholder="1.2905"
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label>Center Longitude</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={searchCenter.longitude}
+                      onChange={(e) => setSearchCenter(prev => ({ ...prev, longitude: e.target.value }))}
+                      placeholder="103.8520"
+                      disabled={loading}
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label>Radius (km)</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={searchRadius}
+                      onChange={(e) => setSearchRadius(e.target.value)}
+                      placeholder="5"
+                      disabled={loading}
+                    />
+                  </div>
+                  <button className="primary" onClick={searchNearbyLocations} disabled={loading}>
+                    Search
+                  </button>
+
+                  {searchResults_Geo.length > 0 && (
+                    <div className="search-results">
+                      <strong>Results ({searchResults_Geo.length})</strong>
+                      <div className="results-table-container">
+                        <table className="results-table">
+                          <thead>
+                            <tr>
+                              <th>#</th>
+                              <th>Location Name</th>
+                              <th>Distance (km)</th>
+                              <th>Coordinates</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {searchResults_Geo.map((result, idx) => (
+                              <tr key={idx}>
+                                <td>{idx + 1}</td>
+                                <td>{result.name}</td>
+                                <td>{result.distance?.toFixed(2)}</td>
+                                <td>{result.latitude.toFixed(4)}, {result.longitude.toFixed(4)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="geo-panel">
+                  <h3>Calculate Distance</h3>
+                  <div className="input-group">
+                    <label>From Location</label>
+                    <select
+                      value={distanceCalc.from}
+                      onChange={(e) => setDistanceCalc(prev => ({ ...prev, from: e.target.value }))}
+                      disabled={loading}
+                    >
+                      <option value="">Select location...</option>
+                      {geoLocations.map((loc, idx) => (
+                        <option key={idx} value={loc.name}>{loc.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="input-group">
+                    <label>To Location</label>
+                    <select
+                      value={distanceCalc.to}
+                      onChange={(e) => setDistanceCalc(prev => ({ ...prev, to: e.target.value }))}
+                      disabled={loading}
+                    >
+                      <option value="">Select location...</option>
+                      {geoLocations.map((loc, idx) => (
+                        <option key={idx} value={loc.name}>{loc.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <button className="primary" onClick={calculateDistance} disabled={loading}>
+                    Calculate Distance
+                  </button>
+                  {distanceCalc.result && (
+                    <div className="distance-result">
+                      <strong>Distance:</strong> {distanceCalc.result} km
+                    </div>
+                  )}
+                </div>
+
+                <div className="button-group">
+                  <button className="secondary" onClick={loadSampleGeoData} disabled={loading}>
+                    Load Sample Data
+                  </button>
+                  <button className="secondary" onClick={clearGeoData} disabled={loading}>
+                    Clear All Data
+                  </button>
+                </div>
+
+                <div className="locations-list">
+                  <strong>All Locations ({geoLocations.length})</strong>
+                  <div className="list-items">
+                    {geoLocations.map((loc, idx) => (
+                      <div key={idx} className="location-item">
+                        <span className="location-name">{loc.name}</span>
+                        <span className="location-coords">
+                          {Number(loc.latitude).toFixed(4)}, {Number(loc.longitude).toFixed(4)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="search-section">
               <>
                 <h3>
                   {activeTab === 'fulltext' && 'Full-Text Search'}
@@ -362,16 +676,16 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
                   </button>
                 </div>
               </>
-            )}
+            </div>
+          )}
 
-            {/* Redis Command */}
-            {redisCommand && (
-              <div className="redis-command" style={{ marginTop: '1rem' }}>
-                <strong>Redis Command:</strong>
-                <code>{redisCommand}</code>
-              </div>
-            )}
-          </div>
+          {/* Redis Command */}
+          {redisCommand && (
+            <div className="redis-command" style={{ marginTop: '1rem' }}>
+              <strong>Redis Command:</strong>
+              <code>{redisCommand}</code>
+            </div>
+          )}
 
           {/* Execution Time */}
           {executionTime !== null && (
@@ -403,28 +717,8 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
             </div>
           )}
 
-          {/* Geo Results */}
-          {geoResults.length > 0 && (
-            <div className="search-section">
-              <h3>Nearby Locations ({geoResults.length})</h3>
-              <div className="results-list">
-                {geoResults.map((location, index) => (
-                  <div key={index} className="result-item">
-                    <div className="result-header">
-                      <h4>📍 {location.name}</h4>
-                      <span className="badge distance">{location.distance.toFixed(2)} km</span>
-                    </div>
-                    <p className="result-description">
-                      Coordinates: {Number(location.coordinates.latitude).toFixed(4)}, {Number(location.coordinates.longitude).toFixed(2)}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* No Results */}
-          {initialized && !loading && results.length === 0 && geoResults.length === 0 && executionTime !== null && (
+          {initialized && !loading && results.length === 0 && executionTime !== null && activeTab !== 'geo' && (
             <div className="search-section">
               <div className="no-results">
                 No results found. Try a different search query.
