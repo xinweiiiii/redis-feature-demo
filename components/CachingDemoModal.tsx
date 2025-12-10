@@ -23,6 +23,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [performanceData, setPerformanceData] = useState<Record<string, PerformanceData>>({});
+  const [useCache, setUseCache] = useState(true);
 
   // Track all cache operations (not just latest per type)
   const [cacheOperations, setCacheOperations] = useState<{ fromCache: boolean }[]>([]);
@@ -105,7 +106,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
 
   const readString = async () => {
     setLastCommand(prev => ({ ...prev, string: `GET ${stringKey}` }));
-    const result = await handleApiCall(`/api/cache/string?key=${stringKey}`, 'GET');
+    const result = await handleApiCall(`/api/cache/string?key=${stringKey}&useCache=${useCache}`, 'GET');
     setStringResult(result.data);
     setPerformanceData(prev => ({ ...prev, string: result }));
     setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
@@ -129,7 +130,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
 
   const readHash = async () => {
     setLastCommand(prev => ({ ...prev, hash: `HGETALL ${hashKey}` }));
-    const result = await handleApiCall(`/api/cache/hash?key=${hashKey}`, 'GET');
+    const result = await handleApiCall(`/api/cache/hash?key=${hashKey}&useCache=${useCache}`, 'GET');
     setHashResult(result.data);
     setPerformanceData(prev => ({ ...prev, hash: result }));
     setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
@@ -217,6 +218,93 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
           {statusMessage && (
             <div className={`status-message ${statusMessage.type}`}>
               {statusMessage.text}
+            </div>
+          )}
+
+          {/* Cache Toggle Control */}
+          <div className="data-type-section" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '1.5rem', marginBottom: '2rem', color: 'white' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ margin: 0, marginBottom: '0.5rem' }}>⚡ Cache vs Database Performance</h3>
+                <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>
+                  Toggle to compare read performance with and without Redis cache
+                </p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 'bold' }}>
+                  <input
+                    type="checkbox"
+                    checked={useCache}
+                    onChange={(e) => setUseCache(e.target.checked)}
+                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                  />
+                  <span>Cache Enabled</span>
+                </label>
+                <div style={{
+                  padding: '0.5rem 1rem',
+                  background: useCache ? '#10b981' : '#ef4444',
+                  borderRadius: '20px',
+                  fontSize: '0.85rem',
+                  fontWeight: 'bold'
+                }}>
+                  {useCache ? '✓ Using Cache' : '✗ Direct DB'}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Performance Comparison */}
+          {Object.keys(performanceData).length > 0 && (
+            <div className="data-type-section" style={{ background: '#f0fdf4', padding: '1.5rem', marginBottom: '2rem', border: '2px solid #10b981' }}>
+              <h3 style={{ marginBottom: '1rem', color: '#065f46' }}>📈 Performance Metrics</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                {Object.entries(performanceData).map(([type, data]: [string, any]) => (
+                  <div key={type} style={{
+                    background: 'white',
+                    padding: '1rem',
+                    borderRadius: '8px',
+                    border: '1px solid #d1d5db'
+                  }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', textTransform: 'capitalize', color: '#1f2937' }}>
+                      {type}
+                    </div>
+                    <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span>Cache:</span>
+                        <span style={{ fontWeight: 'bold', color: '#10b981' }}>
+                          {data?.cacheTime != null ? `${data.cacheTime.toFixed(2)}ms` : '0.00ms'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span>DB:</span>
+                        <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>
+                          {data?.dbTime != null ? `${data.dbTime.toFixed(2)}ms` : '0.00ms'}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.25rem', borderTop: '1px solid #e5e7eb' }}>
+                        <span style={{ fontWeight: 'bold' }}>Total:</span>
+                        <span style={{ fontWeight: 'bold', color: '#dc2626' }}>
+                          {data?.totalTime != null ? `${data.totalTime.toFixed(2)}ms` : '0.00ms'}
+                        </span>
+                      </div>
+                      <div style={{ marginTop: '0.5rem', padding: '0.25rem', background: data?.source === 'cache' ? '#d1fae5' : '#dbeafe', borderRadius: '4px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                        {data?.source === 'cache' ? '⚡ From Cache' : '💾 From Database'}
+                      </div>
+                      {data?.source === 'cache' && data?.dbTime != null && data?.cacheTime != null && data.dbTime > 0 && data.cacheTime > 0 && (
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#059669', fontWeight: 'bold', textAlign: 'center' }}>
+                          {(data.dbTime / data.cacheTime).toFixed(1)}x faster
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: '1rem', padding: '1rem', background: '#fef3c7', borderRadius: '8px', borderLeft: '4px solid #f59e0b' }}>
+                <strong style={{ color: '#92400e' }}>💡 Tip:</strong>
+                <span style={{ color: '#78350f', marginLeft: '0.5rem' }}>
+                  First read after write will be a cache miss. Subsequent reads will hit the cache. Disable cache to always read from database and see the performance difference!
+                </span>
+              </div>
             </div>
           )}
 
@@ -311,19 +399,6 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
                 <strong>Result:</strong> {stringResult}
               </div>
             )}
-            {performanceData.string && (
-              <div className="performance-metrics">
-                <h4>Performance Metrics</h4>
-                <div className="metric">
-                  <span>Execution Time:</span>
-                  <span>{performanceData.string.executionTime.toFixed(3)} ms</span>
-                </div>
-                <div className="metric">
-                  <span>From Cache:</span>
-                  <span>{performanceData.string.fromCache ? 'Yes' : 'No'}</span>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Hash */}
@@ -360,19 +435,6 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
               <div className="result-box success">
                 <strong>Result:</strong>
                 <pre>{JSON.stringify(hashResult, null, 2)}</pre>
-              </div>
-            )}
-            {performanceData.hash && (
-              <div className="performance-metrics">
-                <h4>Performance Metrics</h4>
-                <div className="metric">
-                  <span>Execution Time:</span>
-                  <span>{performanceData.hash.executionTime.toFixed(3)} ms</span>
-                </div>
-                <div className="metric">
-                  <span>From Cache:</span>
-                  <span>{performanceData.hash.fromCache ? 'Yes' : 'No'}</span>
-                </div>
               </div>
             )}
           </div>
@@ -413,19 +475,6 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
                 <pre>{JSON.stringify(listResult, null, 2)}</pre>
               </div>
             )}
-            {performanceData.list && (
-              <div className="performance-metrics">
-                <h4>Performance Metrics</h4>
-                <div className="metric">
-                  <span>Execution Time:</span>
-                  <span>{performanceData.list.executionTime.toFixed(3)} ms</span>
-                </div>
-                <div className="metric">
-                  <span>From Cache:</span>
-                  <span>{performanceData.list.fromCache ? 'Yes' : 'No'}</span>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Set */}
@@ -462,19 +511,6 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
               <div className="result-box success">
                 <strong>Result:</strong>
                 <pre>{JSON.stringify(setResult, null, 2)}</pre>
-              </div>
-            )}
-            {performanceData.set && (
-              <div className="performance-metrics">
-                <h4>Performance Metrics</h4>
-                <div className="metric">
-                  <span>Execution Time:</span>
-                  <span>{performanceData.set.executionTime.toFixed(3)} ms</span>
-                </div>
-                <div className="metric">
-                  <span>From Cache:</span>
-                  <span>{performanceData.set.fromCache ? 'Yes' : 'No'}</span>
-                </div>
               </div>
             )}
           </div>
@@ -522,19 +558,6 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
               <div className="result-box success">
                 <strong>Result:</strong>
                 <pre>{JSON.stringify(zsetResult, null, 2)}</pre>
-              </div>
-            )}
-            {performanceData.sortedset && (
-              <div className="performance-metrics">
-                <h4>Performance Metrics</h4>
-                <div className="metric">
-                  <span>Execution Time:</span>
-                  <span>{performanceData.sortedset.executionTime.toFixed(3)} ms</span>
-                </div>
-                <div className="metric">
-                  <span>From Cache:</span>
-                  <span>{performanceData.sortedset.fromCache ? 'Yes' : 'No'}</span>
-                </div>
               </div>
             )}
           </div>
