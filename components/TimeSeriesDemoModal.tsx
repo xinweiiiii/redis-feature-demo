@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import TimeSeriesChart from './TimeSeriesChart';
+import { useSwipeToClose } from '@/hooks/useSwipeToClose';
 
 interface DataPoint {
   timestamp: number;
@@ -183,9 +184,12 @@ export default function TimeSeriesDemoModal({ onClose }: TimeSeriesDemoModalProp
     });
   };
 
+  const { modalProps } = useSwipeToClose({ onClose });
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content timeseries-modal" onClick={(e) => e.stopPropagation()}>
+      <div {...modalProps} className="modal-content timeseries-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="swipe-indicator" />
         <div className="modal-header">
           <h2>Time Series Demo</h2>
           <button className="modal-close" onClick={onClose}>×</button>

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { useSwipeToClose } from '@/hooks/useSwipeToClose';
 
 interface PerformanceData {
   executionTime: number;
@@ -196,9 +197,12 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
     setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
   };
 
+  const { modalProps } = useSwipeToClose({ onClose });
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+      <div {...modalProps} className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="swipe-indicator" />
         <div className="modal-header">
           <h2>Basic Caching Demo</h2>
           <button className="modal-close" onClick={onClose}>×</button>

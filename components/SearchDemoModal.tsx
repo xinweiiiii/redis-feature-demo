@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
+import CollapsibleSection from './CollapsibleSection';
+import { useSwipeToClose } from '@/hooks/useSwipeToClose';
 
 const GeoMap = dynamic(() => import('./GeoMap'), { ssr: false });
 
@@ -397,9 +399,20 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
     }
   };
 
+  const { modalProps } = useSwipeToClose({
+    onClose,
+    threshold: 100,
+    velocityThreshold: 0.3,
+  });
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content search-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        {...modalProps}
+        className="modal-content search-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="swipe-indicator" />
         <div className="modal-header">
           <h2>Redis Query Engine Demo</h2>
           <button className="modal-close" onClick={onClose}>×</button>
@@ -474,8 +487,7 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
 
               {/* Controls Section */}
               <div className="geo-controls-section">
-                <div className="geo-panel">
-                  <h3>Add Location</h3>
+                <CollapsibleSection title="Add Location" icon="📍" defaultOpen={false}>
                   <div className="input-group">
                     <label>Location Name</label>
                     <input
@@ -511,10 +523,9 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
                   <button className="primary" onClick={addGeoLocation} disabled={loading}>
                     Add Location
                   </button>
-                </div>
+                </CollapsibleSection>
 
-                <div className="geo-panel">
-                  <h3>Search Nearby</h3>
+                <CollapsibleSection title="Search Nearby" icon="🔍" defaultOpen={true}>
                   <div className="input-group">
                     <label>Center Latitude</label>
                     <input
@@ -579,10 +590,9 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
                       </div>
                     </div>
                   )}
-                </div>
+                </CollapsibleSection>
 
-                <div className="geo-panel">
-                  <h3>Calculate Distance</h3>
+                <CollapsibleSection title="Calculate Distance" icon="📏" defaultOpen={false}>
                   <div className="input-group">
                     <label>From Location</label>
                     <select
@@ -617,7 +627,7 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
                       <strong>Distance:</strong> {distanceCalc.result} km
                     </div>
                   )}
-                </div>
+                </CollapsibleSection>
 
                 <div className="button-group">
                   <button className="secondary" onClick={loadSampleGeoData} disabled={loading}>

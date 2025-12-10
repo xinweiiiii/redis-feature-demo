@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import dynamic from 'next/dynamic';
+import { useSwipeToClose } from '@/hooks/useSwipeToClose';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
@@ -178,9 +179,12 @@ export default function PubSubDemoModal({ onClose }: PubSubDemoModalProps) {
     setMessages([]);
   };
 
+  const { modalProps } = useSwipeToClose({ onClose });
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content pubsub-modal" onClick={(e) => e.stopPropagation()}>
+      <div {...modalProps} className="modal-content pubsub-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="swipe-indicator" />
         <div className="modal-header">
           <h2>Pub/Sub Messaging Demo</h2>
           <button className="modal-close" onClick={onClose}>×</button>

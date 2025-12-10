@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { useSwipeToClose } from '@/hooks/useSwipeToClose';
 
 interface LeaderboardEntry {
   rank: number;
@@ -296,9 +297,12 @@ export default function LeaderboardDemoModal({ onClose }: LeaderboardDemoModalPr
     }
   };
 
+  const { modalProps } = useSwipeToClose({ onClose });
+
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content stream-modal" onClick={(e) => e.stopPropagation()}>
+      <div {...modalProps} className="modal-content stream-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="swipe-indicator" />
         <div className="modal-header">
           <h2>Redis Leaderboards Demo</h2>
           <button className="modal-close" onClick={onClose}>×</button>
