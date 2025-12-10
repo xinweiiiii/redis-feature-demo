@@ -3,6 +3,9 @@
 import { useState, useMemo } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { useSwipeToClose } from '@/hooks/useSwipeToClose';
+import RedisCommand from './RedisCommand';
+import CodeExamplesPanel from './CodeExamplesPanel';
+import { cachingExamples } from '@/lib/codeExamples';
 
 interface PerformanceData {
   executionTime: number;
@@ -300,12 +303,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
                 Read String
               </button>
             </div>
-            {lastCommand.string && (
-              <div className="redis-command">
-                <strong>Redis Command:</strong>
-                <code>{lastCommand.string}</code>
-              </div>
-            )}
+            {lastCommand.string && <RedisCommand command={lastCommand.string} />}
             {stringResult !== null && (
               <div className="result-box success">
                 <strong>Result:</strong> {stringResult}
@@ -355,12 +353,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
                 Read Hash
               </button>
             </div>
-            {lastCommand.hash && (
-              <div className="redis-command">
-                <strong>Redis Command:</strong>
-                <code>{lastCommand.hash}</code>
-              </div>
-            )}
+            {lastCommand.hash && <RedisCommand command={lastCommand.hash} />}
             {hashResult && (
               <div className="result-box success">
                 <strong>Result:</strong>
@@ -411,12 +404,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
                 Read List
               </button>
             </div>
-            {lastCommand.list && (
-              <div className="redis-command">
-                <strong>Redis Command:</strong>
-                <code>{lastCommand.list}</code>
-              </div>
-            )}
+            {lastCommand.list && <RedisCommand command={lastCommand.list} />}
             {listResult && (
               <div className="result-box success">
                 <strong>Result:</strong>
@@ -467,12 +455,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
                 Read Set
               </button>
             </div>
-            {lastCommand.set && (
-              <div className="redis-command">
-                <strong>Redis Command:</strong>
-                <code>{lastCommand.set}</code>
-              </div>
-            )}
+            {lastCommand.set && <RedisCommand command={lastCommand.set} />}
             {setResult && (
               <div className="result-box success">
                 <strong>Result:</strong>
@@ -532,12 +515,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
                 Read Sorted Set
               </button>
             </div>
-            {lastCommand.sortedset && (
-              <div className="redis-command">
-                <strong>Redis Command:</strong>
-                <code>{lastCommand.sortedset}</code>
-              </div>
-            )}
+            {lastCommand.sortedset && <RedisCommand command={lastCommand.sortedset} />}
             {zsetResult && (
               <div className="result-box success">
                 <strong>Result:</strong>
@@ -558,6 +536,9 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
               </div>
             )}
           </div>
+
+          {/* Code Examples */}
+          <CodeExamplesPanel examples={cachingExamples} defaultOpen={false} />
         </div>
       </div>
     </div>

@@ -5,6 +5,9 @@ import dynamic from 'next/dynamic';
 import 'leaflet/dist/leaflet.css';
 import CollapsibleSection from './CollapsibleSection';
 import { useSwipeToClose } from '@/hooks/useSwipeToClose';
+import RedisCommand from './RedisCommand';
+import CodeExamplesPanel from './CodeExamplesPanel';
+import { geospatialExamples } from '@/lib/codeExamples';
 
 const GeoMap = dynamic(() => import('./GeoMap'), { ssr: false });
 
@@ -690,12 +693,7 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
           )}
 
           {/* Redis Command */}
-          {redisCommand && (
-            <div className="redis-command" style={{ marginTop: '1rem' }}>
-              <strong>Redis Command:</strong>
-              <code>{redisCommand}</code>
-            </div>
-          )}
+          {redisCommand && <RedisCommand command={redisCommand} />}
 
           {/* Execution Time */}
           {executionTime !== null && (
@@ -734,6 +732,11 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
                 No results found. Try a different search query.
               </div>
             </div>
+          )}
+
+          {/* Code Examples - Show geospatial examples when on geo tab */}
+          {activeTab === 'geo' && (
+            <CodeExamplesPanel examples={geospatialExamples} defaultOpen={false} />
           )}
         </div>
       </div>

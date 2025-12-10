@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useSwipeToClose } from '@/hooks/useSwipeToClose';
+import RedisCommand from './RedisCommand';
+import CodeExamplesPanel from './CodeExamplesPanel';
+import { pubsubExamples } from '@/lib/codeExamples';
 
 const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
@@ -370,12 +373,10 @@ export default function PubSubDemoModal({ onClose }: PubSubDemoModalProps) {
             </div>
           )}
 
-          {lastCommand && (
-            <div className="redis-command">
-              <strong>Redis Command:</strong>
-              <code>{lastCommand}</code>
-            </div>
-          )}
+          {lastCommand && <RedisCommand command={lastCommand} />}
+
+          {/* Code Examples */}
+          <CodeExamplesPanel examples={pubsubExamples} defaultOpen={false} />
         </div>
       </div>
     </div>

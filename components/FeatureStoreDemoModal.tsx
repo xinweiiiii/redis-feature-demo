@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import RedisCommand from './RedisCommand';
 
 interface UserFeatures {
   userId: string;
@@ -448,12 +449,7 @@ export default function FeatureStoreDemoModal({ onClose }: FeatureStoreDemoModal
           )}
 
           {/* Redis Command Display */}
-          {redisCommand && (
-            <div className="redis-command">
-              <strong>Redis Command:</strong>
-              <code>{redisCommand}</code>
-            </div>
-          )}
+          {redisCommand && <RedisCommand command={redisCommand} />}
 
           {/* Compute Features Tab */}
           {activeTab === 'compute' && (

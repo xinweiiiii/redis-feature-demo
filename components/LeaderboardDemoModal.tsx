@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 import { useSwipeToClose } from '@/hooks/useSwipeToClose';
+import RedisCommand from './RedisCommand';
+import CodeExamplesPanel from './CodeExamplesPanel';
+import { leaderboardExamples } from '@/lib/codeExamples';
 
 interface LeaderboardEntry {
   rank: number;
@@ -316,12 +319,7 @@ export default function LeaderboardDemoModal({ onClose }: LeaderboardDemoModalPr
           )}
 
           {/* Redis Command Display */}
-          {redisCommand && (
-            <div className="redis-command" style={{ marginBottom: '1rem' }}>
-              <strong>Redis Command:</strong>
-              <code style={{ whiteSpace: 'pre-wrap' }}>{redisCommand}</code>
-            </div>
-          )}
+          {redisCommand && <RedisCommand command={redisCommand} />}
 
           {/* Info Section */}
           <div className="search-section" style={{ background: '#fff3e0', padding: '1rem', borderRadius: '8px' }}>
@@ -614,6 +612,9 @@ export default function LeaderboardDemoModal({ onClose }: LeaderboardDemoModalPr
               </div>
             </div>
           )}
+
+          {/* Code Examples */}
+          <CodeExamplesPanel examples={leaderboardExamples} defaultOpen={false} />
         </div>
       </div>
     </div>
