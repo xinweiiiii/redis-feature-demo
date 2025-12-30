@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import CachingDemoCard from '@/components/CachingDemoCard'
 import PubSubDemoCard from '@/components/PubSubDemoCard'
 import RateLimitDemoCard from '@/components/RateLimitDemoCard'
@@ -14,6 +15,18 @@ import PlaceholderCard from '@/components/PlaceholderCard'
 export default function Home() {
   return (
     <div className="container">
+      <div className="infrastructure-banner">
+        <div className="infrastructure-banner-content">
+          <div className="infrastructure-banner-text">
+            <h2>Redis Enterprise Infrastructure</h2>
+            <p>Learn about clustering, high availability, geo-distribution, and enterprise capabilities</p>
+          </div>
+          <Link href="/infrastructure" className="infrastructure-button">
+            View Infrastructure Guide →
+          </Link>
+        </div>
+      </div>
+
       <div className="cards-grid">
         <CachingDemoCard />
         <PubSubDemoCard />

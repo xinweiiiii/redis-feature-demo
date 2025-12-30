@@ -4,6 +4,21 @@ import { useToast } from '@/contexts/ToastContext';
 import { useEffect, useState } from 'react';
 
 export default function ToastContainer() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Don't render on server
+  if (!isMounted) {
+    return null;
+  }
+
+  return <ToastContainerClient />;
+}
+
+function ToastContainerClient() {
   const { toasts, removeToast } = useToast();
 
   return (

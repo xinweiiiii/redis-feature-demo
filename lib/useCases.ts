@@ -671,8 +671,7 @@ export const rateLimitUseCases = {
       'Clock synchronization important',
       'May need custom sliding window logic',
       'Limited built-in algorithms',
-      'No built-in rate limit analytics',
-      'Potential single point of failure (mitigate with Redis Cluster)'
+      'No built-in rate limit analytics'
     ]
   }
 };

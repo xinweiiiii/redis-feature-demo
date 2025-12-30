@@ -9,8 +9,8 @@ export default function Header() {
   const pathname = usePathname();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // Don't show header on login page
-  if (pathname === '/login') {
+  // Don't show header on login page or infrastructure page
+  if (pathname === '/login' || pathname === '/infrastructure') {
     return null;
   }
 
