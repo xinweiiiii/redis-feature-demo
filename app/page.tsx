@@ -10,7 +10,7 @@ import LeaderboardDemoCard from '@/components/LeaderboardDemoCard'
 import SemanticCacheDemoCard from '@/components/SemanticCacheDemoCard'
 import FeatureStoreDemoCard from '@/components/FeatureStoreDemoCard'
 import ProbabilisticDemoCard from '@/components/ProbabilisticDemoCard'
-import PlaceholderCard from '@/components/PlaceholderCard'
+import RDIDemoCard from '@/components/RDIDemoCard'
 
 export default function Home() {
   return (
@@ -39,11 +39,7 @@ export default function Home() {
         <SemanticCacheDemoCard />
         <FeatureStoreDemoCard />
         <ProbabilisticDemoCard />
-        <PlaceholderCard
-          title="Redis Data Integration (RDI)"
-          description="Sync data from various sources to Redis in real-time"
-          comingSoon={true}
-        />
+        <RDIDemoCard />
       </div>
     </div>
   );
