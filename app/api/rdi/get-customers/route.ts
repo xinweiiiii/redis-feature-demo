@@ -40,14 +40,14 @@ export async function GET(request: NextRequest) {
           id: parseInt(customerData.id),
           name: customerData.name,
           email: customerData.email,
-          country: customerData.country || null,
+          country: customerData.country === '' ? null : customerData.country,
           created_at: customerData.created_at,
         };
       })
     );
 
     // Filter out any null entries
-    const validCustomers = customers.filter((c) => c !== null);
+    const validCustomers = customers.filter((c): c is NonNullable<typeof c> => c !== null);
 
     const redisReadTime = (performance.now() - redisStartTime).toFixed(2);
 

@@ -30,13 +30,23 @@ export default function RDIDemo() {
   // Fetch customers from Redis
   const fetchCustomers = async () => {
     try {
+      console.log('Fetching customers from Redis...');
       const response = await fetch('/api/rdi/get-customers');
+      console.log('Response status:', response.status, response.statusText);
+
       const data = await response.json();
       console.log('Fetch customers response:', data);
+      console.log('Customers array:', data.customers);
+      console.log('Customers array length:', data.customers?.length);
+      console.log('Customers array type:', typeof data.customers);
+      console.log('Is array?:', Array.isArray(data.customers));
 
       if (data.success) {
-        console.log('Setting customers:', data.customers);
-        setCustomers(data.customers || []);
+        const customerArray = data.customers || [];
+        console.log('Setting customers - count:', customerArray.length);
+        console.log('Customer data:', JSON.stringify(customerArray, null, 2));
+        setCustomers(customerArray);
+
         if (data.metrics) {
           setMetrics(prev => ({ ...prev, redisReadTime: data.metrics.redisReadTime }));
         }
@@ -262,10 +272,27 @@ export default function RDIDemo() {
               </div>
             )}
 
+            {/* Debug info */}
+            <div style={{
+              padding: '0.5rem',
+              background: '#f0f0f0',
+              fontSize: '0.75rem',
+              marginBottom: '1rem',
+              borderRadius: '4px',
+              fontFamily: 'monospace'
+            }}>
+              <strong>Debug:</strong> customers.length = {customers.length},
+              Array: {Array.isArray(customers) ? 'Yes' : 'No'},
+              State: {JSON.stringify(customers).substring(0, 100)}...
+            </div>
+
             <div className="rdi-demo-table-wrapper">
               {customers.length === 0 ? (
                 <div className="rdi-demo-empty">
                   <p>No customers yet. Add one using the form!</p>
+                  <p style={{ fontSize: '0.85rem', color: '#999', marginTop: '0.5rem' }}>
+                    Check browser console for debug logs
+                  </p>
                 </div>
               ) : (
                 <table className="rdi-demo-table">
