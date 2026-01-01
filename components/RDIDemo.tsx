@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 interface Customer {
   id: number;
@@ -27,12 +27,21 @@ export default function RDIDemo() {
   const [success, setSuccess] = useState('');
   const [metrics, setMetrics] = useState<Metrics>({});
 
-  // Fetch customers from Redis
-  const fetchCustomers = async () => {
+  // Fetch customers from Redis - wrapped in useCallback for stable reference
+  const fetchCustomers = useCallback(async () => {
     try {
-      console.log('Fetching customers from Redis...');
-      const response = await fetch('/api/rdi/get-customers');
+      console.log('=== FETCHING CUSTOMERS FROM REDIS ===');
+      const response = await fetch('/api/rdi/get-customers', {
+        cache: 'no-store', // Prevent caching
+        headers: {
+          'Cache-Control': 'no-cache',
+        }
+      });
       console.log('Response status:', response.status, response.statusText);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
 
       const data = await response.json();
       console.log('Fetch customers response:', data);
@@ -41,29 +50,32 @@ export default function RDIDemo() {
       console.log('Customers array type:', typeof data.customers);
       console.log('Is array?:', Array.isArray(data.customers));
 
-      if (data.success) {
-        const customerArray = data.customers || [];
+      if (data.success && data.customers) {
+        const customerArray = Array.isArray(data.customers) ? data.customers : [];
         console.log('Setting customers - count:', customerArray.length);
         console.log('Customer data:', JSON.stringify(customerArray, null, 2));
 
-        // Force state update
+        // Force state update with new array reference
         console.log('About to call setCustomers with:', customerArray);
-        setCustomers([...customerArray]); // Force new array reference
+        setCustomers([...customerArray]);
 
-        console.log('setCustomers called');
+        console.log('✓ setCustomers called successfully');
 
         if (data.metrics) {
           setMetrics(prev => ({ ...prev, redisReadTime: data.metrics.redisReadTime }));
         }
       } else {
-        console.error('Failed to fetch customers:', data.error);
+        console.error('Failed to fetch customers:', data.error || 'Invalid response');
         setError(data.error || 'Failed to fetch customers');
+        setCustomers([]); // Ensure we set empty array
       }
     } catch (err) {
-      console.error('Error fetching customers:', err);
+      console.error('❌ Error fetching customers:', err);
       setError('Failed to fetch customers');
+      setCustomers([]); // Ensure we set empty array on error
     }
-  };
+    console.log('=== FETCH COMPLETE ===\n');
+  }, []); // Empty deps - function is stable
 
   // Load customers on mount
   useEffect(() => {
@@ -108,8 +120,11 @@ export default function RDIDemo() {
         setName('');
         setEmail('');
         setCountry('');
-        // Refresh the customer list
+
+        // Refresh the customer list - CRITICAL for UI update
+        console.log('🔄 INSERT SUCCESSFUL - Refreshing customer list...');
         await fetchCustomers();
+        console.log('✓ Customer list refreshed after insert');
       } else {
         setError(data.error || 'Failed to add customer');
       }
@@ -141,8 +156,12 @@ export default function RDIDemo() {
 
       if (response.ok) {
         setSuccess(`Cleared ${data.deletedCount} customers from PostgreSQL - RDI automatically synced deletion to Redis`);
-        // Refetch to ensure state is in sync
+
+        // Refetch to ensure state is in sync - CRITICAL for UI update
+        console.log('🔄 DELETE SUCCESSFUL - Refreshing customer list...');
         await fetchCustomers();
+        console.log('✓ Customer list refreshed after delete');
+
         // Reset metrics
         setMetrics({});
       } else {
@@ -178,8 +197,12 @@ export default function RDIDemo() {
 
       if (response.ok) {
         setSuccess(`Manually cleared ${data.deletedCount} records from Redis cache`);
-        // Refetch to ensure state is in sync
+
+        // Refetch to ensure state is in sync - CRITICAL for UI update
+        console.log('🔄 REDIS CLEAR SUCCESSFUL - Refreshing customer list...');
         await fetchCustomers();
+        console.log('✓ Customer list refreshed after Redis clear');
+
         // Reset metrics
         setMetrics({});
       } else {
