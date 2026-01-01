@@ -369,19 +369,6 @@ export default function RDIDemo() {
               </div>
             )}
 
-            {/* Debug info */}
-            <div style={{
-              padding: '0.5rem',
-              background: '#f0f0f0',
-              fontSize: '0.75rem',
-              marginBottom: '1rem',
-              borderRadius: '4px',
-              fontFamily: 'monospace'
-            }}>
-              <strong>Debug:</strong> customers.length = {customers.length},
-              Array: {Array.isArray(customers) ? 'Yes' : 'No'},
-              State: {JSON.stringify(customers).substring(0, 100)}...
-            </div>
 
             <div className="rdi-demo-table-wrapper">
               {customers.length === 0 ? (
