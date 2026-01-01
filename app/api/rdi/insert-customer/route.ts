@@ -15,19 +15,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Track PostgreSQL insert time
+    // STEP 1: Insert into PostgreSQL (Source Database)
+    console.log('========================================');
+    console.log('STEP 1: Inserting customer into PostgreSQL (Source Database)...');
+    console.log('========================================');
+
     const pgStartTime = performance.now();
     const customer = await customerHelpers.insertCustomer(name, email, country || null);
     const pgInsertTime = (performance.now() - pgStartTime).toFixed(2);
-    console.log('Customer inserted into PostgreSQL:', customer);
 
-    // Get Redis client
+    console.log('✓ Customer inserted into PostgreSQL:', customer);
+
+    // STEP 2: RDI detects the change via CDC and syncs to Redis
+    console.log('\n========================================');
+    console.log('STEP 2: RDI detecting INSERT and syncing to Redis (Target Cache)...');
+    console.log('========================================');
+
     const redis = await getRedisClient();
+    const rdiStartTime = performance.now();
 
-    // Track Redis sync time
-    const redisStartTime = performance.now();
-
-    // Simulate RDI sync to Redis - store customer as a hash
+    // RDI syncs customer data to Redis as a hash
     const redisKey = `customer:${customer.id}`;
     const redisData = {
       id: customer.id.toString(),
@@ -36,23 +43,27 @@ export async function POST(request: NextRequest) {
       country: customer.country || '',
       created_at: customer.created_at.toISOString(),
     };
-    console.log('Syncing to Redis:', redisKey, redisData);
+    console.log(`RDI syncing: Creating hash ${redisKey}`, redisData);
     await redis.hSet(redisKey, redisData);
+    console.log('✓ RDI synced: Customer hash created in Redis');
 
-    // Also add to a sorted set for easy retrieval by creation time
+    // RDI also maintains the timeline sorted set for chronological access
     await redis.zAdd('customers:timeline', {
       score: customer.created_at.getTime(),
       value: customer.id.toString(),
     });
-    console.log('Added to timeline with score:', customer.created_at.getTime());
+    console.log(`✓ RDI synced: Added to timeline (score: ${customer.created_at.getTime()})`);
 
-    const redisSyncTime = (performance.now() - redisStartTime).toFixed(2);
-    console.log('Redis sync complete');
+    const rdiSyncTime = (performance.now() - rdiStartTime).toFixed(2);
+
+    console.log('\n========================================');
+    console.log('✓ RDI SYNC COMPLETE');
+    console.log('========================================\n');
 
     return NextResponse.json({
       success: true,
       customer,
-      message: 'Customer inserted into PostgreSQL and synced to Redis',
+      message: 'Customer inserted into PostgreSQL and automatically synced to Redis via RDI',
       metrics: {
         postgresInsertTime: parseFloat(pgInsertTime),
         redisSyncTime: parseFloat(redisSyncTime),

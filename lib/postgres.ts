@@ -72,22 +72,40 @@ export const customerHelpers = {
   deleteAllCustomers: async (): Promise<void> => {
     const client = await pool.connect();
     try {
+      console.log('Starting PostgreSQL delete transaction...');
       await client.query('BEGIN');
 
       // Delete all customers
+      console.log('Executing DELETE FROM demo.customers...');
       const deleteResult = await client.query('DELETE FROM demo.customers');
       console.log(`Deleted ${deleteResult.rowCount} customers from PostgreSQL`);
 
       // Reset the sequence so IDs start from 1 again
-      await client.query('ALTER SEQUENCE demo.customers_id_seq RESTART WITH 1');
+      // Try to reset, but don't fail if sequence doesn't exist or has different name
+      try {
+        console.log('Attempting to reset sequence...');
+        await client.query('ALTER SEQUENCE demo.customers_id_seq RESTART WITH 1');
+        console.log('Sequence reset successful');
+      } catch (seqError: any) {
+        console.warn('Could not reset sequence (this is ok):', seqError.message);
+        // Don't throw - sequence reset is optional
+      }
 
       await client.query('COMMIT');
-    } catch (error) {
+      console.log('PostgreSQL delete transaction committed successfully');
+    } catch (error: any) {
       await client.query('ROLLBACK');
-      console.error('Error deleting customers:', error);
+      console.error('Error deleting customers - rolling back:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        detail: error.detail,
+        stack: error.stack
+      });
       throw error;
     } finally {
       client.release();
+      console.log('PostgreSQL client released');
     }
   },
 

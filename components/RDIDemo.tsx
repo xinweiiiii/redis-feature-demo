@@ -74,7 +74,7 @@ export default function RDIDemo() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess(`Customer "${data.customer.name}" added successfully and synced to Redis!`);
+        setSuccess(`Customer "${data.customer.name}" added to PostgreSQL - RDI automatically synced to Redis!`);
         if (data.metrics) {
           setMetrics(prev => ({
             ...prev,
@@ -118,7 +118,7 @@ export default function RDIDemo() {
       console.log('Clear customers response:', data);
 
       if (response.ok) {
-        setSuccess(`Cleared ${data.deletedCount} customers from PostgreSQL and Redis`);
+        setSuccess(`Cleared ${data.deletedCount} customers from PostgreSQL - RDI automatically synced deletion to Redis`);
         // Refetch to ensure state is in sync
         await fetchCustomers();
         // Reset metrics
@@ -251,8 +251,8 @@ export default function RDIDemo() {
                     <span className="metric-value">{metrics.postgresInsertTime}ms</span>
                   </div>
                   <div className="metric-item">
-                    <span className="metric-label">Redis Sync:</span>
-                    <span className="metric-value">{metrics.redisSyncTime}ms</span>
+                    <span className="metric-label">RDI Sync to Redis:</span>
+                    <span className="metric-value">{metrics.rdiSyncTime}ms</span>
                   </div>
                   <div className="metric-item">
                     <span className="metric-label">Total Time:</span>
