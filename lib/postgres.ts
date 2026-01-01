@@ -70,7 +70,25 @@ export const customerHelpers = {
 
   // Delete all customers (for demo reset)
   deleteAllCustomers: async (): Promise<void> => {
-    await pool.query('DELETE FROM demo.customers');
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+
+      // Delete all customers
+      const deleteResult = await client.query('DELETE FROM demo.customers');
+      console.log(`Deleted ${deleteResult.rowCount} customers from PostgreSQL`);
+
+      // Reset the sequence so IDs start from 1 again
+      await client.query('ALTER SEQUENCE demo.customers_id_seq RESTART WITH 1');
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error deleting customers:', error);
+      throw error;
+    } finally {
+      client.release();
+    }
   },
 
   // Get customers count
