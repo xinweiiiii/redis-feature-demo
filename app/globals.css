@@ -3590,6 +3590,7 @@ pre {
   display: flex;
   gap: 0.75rem;
   margin-top: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .rdi-demo-button {
@@ -3601,6 +3602,7 @@ pre {
   transition: all 0.2s;
   border: none;
   flex: 1;
+  min-width: 140px;
 }
 
 .rdi-demo-button.primary {

@@ -45,7 +45,12 @@ export default function RDIDemo() {
         const customerArray = data.customers || [];
         console.log('Setting customers - count:', customerArray.length);
         console.log('Customer data:', JSON.stringify(customerArray, null, 2));
-        setCustomers(customerArray);
+
+        // Force state update
+        console.log('About to call setCustomers with:', customerArray);
+        setCustomers([...customerArray]); // Force new array reference
+
+        console.log('setCustomers called');
 
         if (data.metrics) {
           setMetrics(prev => ({ ...prev, redisReadTime: data.metrics.redisReadTime }));
@@ -62,8 +67,15 @@ export default function RDIDemo() {
 
   // Load customers on mount
   useEffect(() => {
+    console.log('Component mounted, fetching customers...');
     fetchCustomers();
   }, []);
+
+  // Log state changes
+  useEffect(() => {
+    console.log('Customers state changed:', customers);
+    console.log('Customers count in state:', customers.length);
+  }, [customers]);
 
   // Insert customer
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,9 +120,9 @@ export default function RDIDemo() {
     }
   };
 
-  // Clear all customers
+  // Clear all customers (PostgreSQL + RDI sync to Redis)
   const handleClear = async () => {
-    if (!confirm('Are you sure you want to clear all customers?')) {
+    if (!confirm('Are you sure you want to clear all customers from PostgreSQL? (RDI will sync deletion to Redis)')) {
       return;
     }
 
@@ -139,6 +151,43 @@ export default function RDIDemo() {
       }
     } catch (err: any) {
       console.error('Error clearing customers:', err);
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Manually clear Redis only (for debugging/cleanup)
+  const handleClearRedis = async () => {
+    if (!confirm('Manually clear Redis cache? (This does NOT touch PostgreSQL)')) {
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      console.log('Manually clearing Redis...');
+      const response = await fetch('/api/rdi/clear-redis', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+      console.log('Clear Redis response:', data);
+
+      if (response.ok) {
+        setSuccess(`Manually cleared ${data.deletedCount} records from Redis cache`);
+        // Refetch to ensure state is in sync
+        await fetchCustomers();
+        // Reset metrics
+        setMetrics({});
+      } else {
+        setError(data.error || 'Failed to clear Redis');
+        console.error('Clear Redis failed:', data);
+      }
+    } catch (err: any) {
+      console.error('Error clearing Redis:', err);
       setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
@@ -217,9 +266,18 @@ export default function RDIDemo() {
                   type="button"
                   className="rdi-demo-button secondary"
                   onClick={handleClear}
-                  disabled={loading || customers.length === 0}
+                  disabled={loading}
                 >
-                  Clear All
+                  Clear All (PG + RDI)
+                </button>
+                <button
+                  type="button"
+                  className="rdi-demo-button secondary"
+                  onClick={handleClearRedis}
+                  disabled={loading}
+                  style={{ fontSize: '0.85rem' }}
+                >
+                  Clear Redis Only
                 </button>
               </div>
             </form>
@@ -236,7 +294,46 @@ export default function RDIDemo() {
           <div className="rdi-demo-card">
             <div className="rdi-demo-card-header">
               <h3>Redis Data</h3>
-              <span className="rdi-demo-badge redis">Cache/Target</span>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <button
+                  onClick={() => {
+                    console.log('Manual refresh clicked');
+                    fetchCustomers();
+                  }}
+                  style={{
+                    padding: '0.25rem 0.75rem',
+                    fontSize: '0.85rem',
+                    background: '#22c55e',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🔄 Refresh
+                </button>
+                <button
+                  onClick={async () => {
+                    console.log('Testing API directly...');
+                    const res = await fetch('/api/rdi/get-customers');
+                    const json = await res.json();
+                    console.log('RAW API Response:', json);
+                    alert(`API returned ${json.customers?.length || 0} customers. Check console for details.`);
+                  }}
+                  style={{
+                    padding: '0.25rem 0.75rem',
+                    fontSize: '0.85rem',
+                    background: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  🧪 Test API
+                </button>
+                <span className="rdi-demo-badge redis">Cache/Target</span>
+              </div>
             </div>
 
             <div className="rdi-demo-stats">
