@@ -66,8 +66,8 @@ export async function POST(request: NextRequest) {
       message: 'Customer inserted into PostgreSQL and automatically synced to Redis via RDI',
       metrics: {
         postgresInsertTime: parseFloat(pgInsertTime),
-        redisSyncTime: parseFloat(redisSyncTime),
-        totalTime: parseFloat(pgInsertTime) + parseFloat(redisSyncTime)
+        rdiSyncTime: parseFloat(rdiSyncTime),
+        totalTime: parseFloat(pgInsertTime) + parseFloat(rdiSyncTime)
       }
     });
   } catch (error: any) {

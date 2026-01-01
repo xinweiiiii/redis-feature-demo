@@ -13,7 +13,7 @@ interface Customer {
 interface Metrics {
   redisReadTime?: number;
   postgresInsertTime?: number;
-  redisSyncTime?: number;
+  rdiSyncTime?: number;
   totalTime?: number;
 }
 
@@ -79,7 +79,7 @@ export default function RDIDemo() {
           setMetrics(prev => ({
             ...prev,
             postgresInsertTime: data.metrics.postgresInsertTime,
-            redisSyncTime: data.metrics.redisSyncTime,
+            rdiSyncTime: data.metrics.rdiSyncTime,
             totalTime: data.metrics.totalTime
           }));
         }
