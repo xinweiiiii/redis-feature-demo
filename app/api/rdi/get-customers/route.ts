@@ -28,6 +28,14 @@ export async function GET(request: NextRequest) {
     const customers = await Promise.all(
       customerIds.map(async (id) => {
         const customerData = await redis.hGetAll(`customer:${id}`);
+        console.log(`Customer ${id} data from Redis:`, customerData);
+
+        // Skip if customer data is empty (shouldn't happen, but safety check)
+        if (!customerData || Object.keys(customerData).length === 0) {
+          console.warn(`No data found for customer:${id}`);
+          return null;
+        }
+
         return {
           id: parseInt(customerData.id),
           name: customerData.name,
@@ -38,12 +46,17 @@ export async function GET(request: NextRequest) {
       })
     );
 
+    // Filter out any null entries
+    const validCustomers = customers.filter((c) => c !== null);
+
     const redisReadTime = (performance.now() - redisStartTime).toFixed(2);
+
+    console.log(`Returning ${validCustomers.length} customers`);
 
     return NextResponse.json({
       success: true,
-      customers,
-      count: customers.length,
+      customers: validCustomers,
+      count: validCustomers.length,
       metrics: {
         redisReadTime: parseFloat(redisReadTime)
       }

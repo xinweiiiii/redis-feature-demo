@@ -32,14 +32,21 @@ export default function RDIDemo() {
     try {
       const response = await fetch('/api/rdi/get-customers');
       const data = await response.json();
+      console.log('Fetch customers response:', data);
+
       if (data.success) {
-        setCustomers(data.customers);
+        console.log('Setting customers:', data.customers);
+        setCustomers(data.customers || []);
         if (data.metrics) {
           setMetrics(prev => ({ ...prev, redisReadTime: data.metrics.redisReadTime }));
         }
+      } else {
+        console.error('Failed to fetch customers:', data.error);
+        setError(data.error || 'Failed to fetch customers');
       }
     } catch (err) {
       console.error('Error fetching customers:', err);
+      setError('Failed to fetch customers');
     }
   };
 
@@ -97,21 +104,34 @@ export default function RDIDemo() {
       return;
     }
 
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
     try {
+      console.log('Clearing all customers...');
       const response = await fetch('/api/rdi/clear-customers', {
         method: 'POST',
       });
 
       const data = await response.json();
+      console.log('Clear customers response:', data);
 
       if (response.ok) {
         setSuccess(`Cleared ${data.deletedCount} customers from PostgreSQL and Redis`);
-        setCustomers([]);
+        // Refetch to ensure state is in sync
+        await fetchCustomers();
+        // Reset metrics
+        setMetrics({});
       } else {
         setError(data.error || 'Failed to clear customers');
+        console.error('Clear failed:', data);
       }
     } catch (err: any) {
+      console.error('Error clearing customers:', err);
       setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
     }
   };
 

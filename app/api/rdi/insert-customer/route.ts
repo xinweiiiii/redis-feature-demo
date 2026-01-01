@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
     const pgStartTime = performance.now();
     const customer = await customerHelpers.insertCustomer(name, email, country || null);
     const pgInsertTime = (performance.now() - pgStartTime).toFixed(2);
+    console.log('Customer inserted into PostgreSQL:', customer);
 
     // Get Redis client
     const redis = await getRedisClient();
@@ -28,21 +29,25 @@ export async function POST(request: NextRequest) {
 
     // Simulate RDI sync to Redis - store customer as a hash
     const redisKey = `customer:${customer.id}`;
-    await redis.hSet(redisKey, {
+    const redisData = {
       id: customer.id.toString(),
       name: customer.name,
       email: customer.email,
       country: customer.country || '',
       created_at: customer.created_at.toISOString(),
-    });
+    };
+    console.log('Syncing to Redis:', redisKey, redisData);
+    await redis.hSet(redisKey, redisData);
 
     // Also add to a sorted set for easy retrieval by creation time
     await redis.zAdd('customers:timeline', {
       score: customer.created_at.getTime(),
       value: customer.id.toString(),
     });
+    console.log('Added to timeline with score:', customer.created_at.getTime());
 
     const redisSyncTime = (performance.now() - redisStartTime).toFixed(2);
+    console.log('Redis sync complete');
 
     return NextResponse.json({
       success: true,
