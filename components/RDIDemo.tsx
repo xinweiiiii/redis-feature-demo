@@ -17,6 +17,11 @@ interface Metrics {
   totalTime?: number;
 }
 
+interface ApiResponse {
+  timestamp?: number;
+  cached?: boolean;
+}
+
 export default function RDIDemo() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [name, setName] = useState('');
@@ -26,6 +31,7 @@ export default function RDIDemo() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [metrics, setMetrics] = useState<Metrics>({});
+  const [lastFetch, setLastFetch] = useState<ApiResponse>({});
 
   // Fetch customers from Redis - wrapped in useCallback for stable reference
   const fetchCustomers = useCallback(async () => {
@@ -45,6 +51,8 @@ export default function RDIDemo() {
 
       const data = await response.json();
       console.log('Fetch customers response:', data);
+      console.log('Response timestamp:', data.timestamp, '(', new Date(data.timestamp).toISOString(), ')');
+      console.log('Response cached:', data.cached);
       console.log('Customers array:', data.customers);
       console.log('Customers array length:', data.customers?.length);
       console.log('Customers array type:', typeof data.customers);
@@ -60,6 +68,12 @@ export default function RDIDemo() {
         setCustomers([...customerArray]);
 
         console.log('✓ setCustomers called successfully');
+
+        // Store fetch metadata
+        setLastFetch({
+          timestamp: data.timestamp,
+          cached: data.cached
+        });
 
         if (data.metrics) {
           setMetrics(prev => ({ ...prev, redisReadTime: data.metrics.redisReadTime }));
@@ -369,6 +383,12 @@ export default function RDIDemo() {
                   {metrics.redisReadTime !== undefined ? `${metrics.redisReadTime}ms` : '-'}
                 </span>
                 <span className="stat-label">Redis Read Time</span>
+              </div>
+              <div className="stat">
+                <span className="stat-value" style={{ fontSize: '0.85rem' }}>
+                  {lastFetch.timestamp ? new Date(lastFetch.timestamp).toLocaleTimeString() : '-'}
+                </span>
+                <span className="stat-label">Last Fetch</span>
               </div>
             </div>
 
