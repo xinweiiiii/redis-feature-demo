@@ -1,19 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { useState, useEffect } from 'react';
 import { useSwipeToClose } from '@/hooks/useSwipeToClose';
 import RedisCommand from './RedisCommand';
 import CodeExamplesPanel from './CodeExamplesPanel';
 import UseCaseExplanation from './UseCaseExplanation';
 import { cachingExamples } from '@/lib/codeExamples';
 import { cachingUseCases } from '@/lib/useCases';
-
-interface PerformanceData {
-  executionTime: number;
-  fromCache: boolean;
-  data: any;
-}
 
 interface CachingDemoModalProps {
   onClose: () => void;
@@ -22,21 +15,15 @@ interface CachingDemoModalProps {
 export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
   const [loading, setLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [performanceData, setPerformanceData] = useState<Record<string, PerformanceData>>({});
-  const [useCache, setUseCache] = useState(true);
+  const [performanceData, setPerformanceData] = useState<Record<string, any>>({});
 
-  // Track all cache operations (not just latest per type)
-  const [cacheOperations, setCacheOperations] = useState<{ fromCache: boolean }[]>([]);
-
-  // Calculate cache statistics from all operations
-  const cacheStats = useMemo(() => {
-    const hits = cacheOperations.filter(op => op.fromCache).length;
-    const misses = cacheOperations.filter(op => !op.fromCache).length;
-    const total = hits + misses;
-    const hitRate = total > 0 ? (hits / total) * 100 : 0;
-
-    return { hits, misses, total, hitRate };
-  }, [cacheOperations]);
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    document.body.classList.add('modal-open');
+    return () => {
+      document.body.classList.remove('modal-open');
+    };
+  }, []);
 
   // Redis commands state
   const [lastCommand, setLastCommand] = useState<Record<string, string>>({});
@@ -106,10 +93,9 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
 
   const readString = async () => {
     setLastCommand(prev => ({ ...prev, string: `GET ${stringKey}` }));
-    const result = await handleApiCall(`/api/cache/string?key=${stringKey}&useCache=${useCache}`, 'GET');
+    const result = await handleApiCall(`/api/cache/string?key=${stringKey}`, 'GET');
     setStringResult(result.data);
     setPerformanceData(prev => ({ ...prev, string: result }));
-    setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
   };
 
   // Hash operations
@@ -130,10 +116,9 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
 
   const readHash = async () => {
     setLastCommand(prev => ({ ...prev, hash: `HGETALL ${hashKey}` }));
-    const result = await handleApiCall(`/api/cache/hash?key=${hashKey}&useCache=${useCache}`, 'GET');
+    const result = await handleApiCall(`/api/cache/hash?key=${hashKey}`, 'GET');
     setHashResult(result.data);
     setPerformanceData(prev => ({ ...prev, hash: result }));
-    setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
   };
 
   // List operations
@@ -157,7 +142,6 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
     const result = await handleApiCall(`/api/cache/list?key=${listKey}`, 'GET');
     setListResult(result.data);
     setPerformanceData(prev => ({ ...prev, list: result }));
-    setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
   };
 
   // Set operations
@@ -181,7 +165,6 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
     const result = await handleApiCall(`/api/cache/set?key=${setKey}`, 'GET');
     setSetResult(result.data);
     setPerformanceData(prev => ({ ...prev, set: result }));
-    setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
   };
 
   // Sorted Set operations
@@ -200,7 +183,6 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
     const result = await handleApiCall(`/api/cache/sortedset?key=${zsetKey}`, 'GET');
     setZsetResult(result.data);
     setPerformanceData(prev => ({ ...prev, sortedset: result }));
-    setCacheOperations(prev => [...prev, { fromCache: result.fromCache }]);
   };
 
   const { modalProps } = useSwipeToClose({ onClose });
@@ -221,148 +203,178 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
             </div>
           )}
 
-          {/* Cache Toggle Control */}
-          <div className="data-type-section" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', padding: '1.5rem', marginBottom: '2rem', color: 'white' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-              <div>
-                <h3 style={{ margin: 0, marginBottom: '0.5rem' }}>⚡ Cache vs Database Performance</h3>
-                <p style={{ margin: 0, opacity: 0.9, fontSize: '0.9rem' }}>
-                  Toggle to compare read performance with and without Redis cache
-                </p>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 'bold' }}>
-                  <input
-                    type="checkbox"
-                    checked={useCache}
-                    onChange={(e) => setUseCache(e.target.checked)}
-                    style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                  />
-                  <span>Cache Enabled</span>
-                </label>
-                <div style={{
-                  padding: '0.5rem 1rem',
-                  background: useCache ? '#10b981' : '#ef4444',
-                  borderRadius: '20px',
-                  fontSize: '0.85rem',
-                  fontWeight: 'bold'
-                }}>
-                  {useCache ? '✓ Using Cache' : '✗ Direct DB'}
-                </div>
-              </div>
-            </div>
+          {/* Performance Header */}
+          <div style={{
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            padding: '1.25rem 1.5rem',
+            marginBottom: '1.5rem',
+            borderRadius: '12px',
+            color: 'white',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            boxSizing: 'border-box',
+            maxWidth: '100%'
+          }}>
+            <h3 style={{ margin: 0, marginBottom: '0.5rem', fontSize: '1.25rem', fontWeight: '600' }}>
+              ⚡ Redis Cache vs PostgreSQL Performance
+            </h3>
+            <p style={{ margin: 0, opacity: 0.95, fontSize: '0.875rem', lineHeight: '1.5' }}>
+              Each read operation queries both Redis and PostgreSQL to show real-time performance comparison
+            </p>
           </div>
 
           {/* Performance Comparison */}
           {Object.keys(performanceData).length > 0 && (
-            <div className="data-type-section" style={{ background: '#f0fdf4', padding: '1.5rem', marginBottom: '2rem', border: '2px solid #10b981' }}>
-              <h3 style={{ marginBottom: '1rem', color: '#065f46' }}>📈 Performance Metrics</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+            <div style={{
+              background: 'linear-gradient(to bottom, #f0fdf4, #ffffff)',
+              padding: '1.5rem',
+              marginBottom: '1.5rem',
+              borderRadius: '12px',
+              border: '2px solid #10b981',
+              boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+              boxSizing: 'border-box',
+              maxWidth: '100%',
+              overflow: 'hidden'
+            }}>
+              <h3 style={{
+                margin: 0,
+                marginBottom: '1.25rem',
+                color: '#065f46',
+                fontSize: '1.125rem',
+                fontWeight: '600',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem'
+              }}>
+                📈 Performance Comparison
+              </h3>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(min(280px, 100%), 1fr))',
+                gap: '1.25rem'
+              }}>
                 {Object.entries(performanceData).map(([type, data]: [string, any]) => (
                   <div key={type} style={{
                     background: 'white',
-                    padding: '1rem',
-                    borderRadius: '8px',
-                    border: '1px solid #d1d5db'
+                    padding: '1.25rem',
+                    borderRadius: '10px',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+                    boxSizing: 'border-box',
+                    maxWidth: '100%',
+                    overflow: 'hidden'
                   }}>
-                    <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', textTransform: 'capitalize', color: '#1f2937' }}>
+                    <div style={{
+                      fontWeight: '600',
+                      marginBottom: '1rem',
+                      textTransform: 'capitalize',
+                      color: '#111827',
+                      fontSize: '1rem',
+                      paddingBottom: '0.75rem',
+                      borderBottom: '2px solid #f3f4f6'
+                    }}>
                       {type}
                     </div>
-                    <div style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                        <span>Cache:</span>
-                        <span style={{ fontWeight: 'bold', color: '#10b981' }}>
-                          {data?.cacheTime != null ? `${data.cacheTime.toFixed(2)}ms` : '0.00ms'}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                        <span>DB:</span>
-                        <span style={{ fontWeight: 'bold', color: '#3b82f6' }}>
-                          {data?.dbTime != null ? `${data.dbTime.toFixed(2)}ms` : '0.00ms'}
-                        </span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '0.25rem', borderTop: '1px solid #e5e7eb' }}>
-                        <span style={{ fontWeight: 'bold' }}>Total:</span>
-                        <span style={{ fontWeight: 'bold', color: '#dc2626' }}>
-                          {data?.totalTime != null ? `${data.totalTime.toFixed(2)}ms` : '0.00ms'}
-                        </span>
-                      </div>
-                      <div style={{ marginTop: '0.5rem', padding: '0.25rem', background: data?.source === 'cache' ? '#d1fae5' : '#dbeafe', borderRadius: '4px', textAlign: 'center', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                        {data?.source === 'cache' ? '⚡ From Cache' : '💾 From Database'}
-                      </div>
-                      {data?.source === 'cache' && data?.dbTime != null && data?.cacheTime != null && data.dbTime > 0 && data.cacheTime > 0 && (
-                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: '#059669', fontWeight: 'bold', textAlign: 'center' }}>
-                          {(data.dbTime / data.cacheTime).toFixed(1)}x faster
+
+                    {/* Side by Side Comparison */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                      {/* Redis Cache */}
+                      <div style={{
+                        padding: '1rem',
+                        background: 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)',
+                        borderRadius: '8px',
+                        border: '2px solid #10b981',
+                        textAlign: 'center',
+                        transition: 'transform 0.2s'
+                      }}>
+                        <div style={{ fontSize: '0.65rem', color: '#065f46', fontWeight: '700', marginBottom: '0.5rem', letterSpacing: '0.5px' }}>
+                          ⚡ REDIS
                         </div>
-                      )}
+                        <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#047857', marginBottom: '0.25rem' }}>
+                          {data?.cacheResult?.time != null ? `${data.cacheResult.time.toFixed(2)}ms` : 'N/A'}
+                        </div>
+                        <div style={{
+                          fontSize: '0.7rem',
+                          color: '#065f46',
+                          fontWeight: '600',
+                          padding: '0.25rem 0.5rem',
+                          background: 'rgba(255, 255, 255, 0.5)',
+                          borderRadius: '4px',
+                          display: 'inline-block'
+                        }}>
+                          {data?.cacheResult?.found ? '✓ Hit' : '✗ Miss'}
+                        </div>
+                      </div>
+
+                      {/* PostgreSQL */}
+                      <div style={{
+                        padding: '1rem',
+                        background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)',
+                        borderRadius: '8px',
+                        border: '2px solid #3b82f6',
+                        textAlign: 'center',
+                        transition: 'transform 0.2s'
+                      }}>
+                        <div style={{ fontSize: '0.65rem', color: '#1e40af', fontWeight: '700', marginBottom: '0.5rem', letterSpacing: '0.5px' }}>
+                          💾 POSTGRES
+                        </div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#1e3a8a', marginBottom: '0.25rem' }}>
+                          {data?.dbResult?.time != null ? `${data.dbResult.time.toFixed(2)}ms` : 'N/A'}
+                        </div>
+                        <div style={{
+                          fontSize: '0.7rem',
+                          color: '#1e40af',
+                          fontWeight: '600',
+                          padding: '0.25rem 0.5rem',
+                          background: 'rgba(255, 255, 255, 0.5)',
+                          borderRadius: '4px',
+                          display: 'inline-block'
+                        }}>
+                          {data?.dbResult?.found ? '✓ Found' : '✗ Not Found'}
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Speedup */}
+                    {data?.speedup > 0 && (
+                      <div style={{
+                        padding: '0.625rem',
+                        background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',
+                        borderRadius: '6px',
+                        textAlign: 'center',
+                        border: '2px solid #f59e0b',
+                        boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+                      }}>
+                        <span style={{ fontSize: '0.875rem', color: '#92400e', fontWeight: '700' }}>
+                          🚀 Redis is {data.speedup.toFixed(1)}x faster
+                        </span>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop: '1rem', padding: '1rem', background: '#fef3c7', borderRadius: '8px', borderLeft: '4px solid #f59e0b' }}>
-                <strong style={{ color: '#92400e' }}>💡 Tip:</strong>
-                <span style={{ color: '#78350f', marginLeft: '0.5rem' }}>
-                  First read after write will be a cache miss. Subsequent reads will hit the cache. Disable cache to always read from database and see the performance difference!
-                </span>
+              <div style={{
+                marginTop: '1.25rem',
+                padding: '1rem 1.25rem',
+                background: 'linear-gradient(to right, #fef3c7, #fde68a)',
+                borderRadius: '8px',
+                borderLeft: '4px solid #f59e0b',
+                boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+                boxSizing: 'border-box',
+                maxWidth: '100%'
+              }}>
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                  <span style={{ fontSize: '1.25rem' }}>💡</span>
+                  <div>
+                    <strong style={{ color: '#92400e', fontSize: '0.875rem' }}>How it works:</strong>
+                    <p style={{ color: '#78350f', margin: '0.25rem 0 0 0', fontSize: '0.875rem', lineHeight: '1.5' }}>
+                      Every read operation queries both Redis (cache) and PostgreSQL (database) simultaneously. First read after write will be a cache miss, then Redis automatically populates the cache for subsequent reads.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Cache Statistics */}
-          {cacheStats.total > 0 && (
-            <div className="data-type-section" style={{ background: 'var(--bg-tertiary)', padding: '1.5rem', marginBottom: '2rem' }}>
-              <h3 style={{ marginBottom: '1rem' }}>📊 Cache Performance Statistics</h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', alignItems: 'center' }}>
-                <div>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={[
-                          { name: 'Cache Hits', value: cacheStats.hits },
-                          { name: 'Cache Misses', value: cacheStats.misses }
-                        ]}
-                        cx="50%"
-                        cy="50%"
-                        labelLine={false}
-                        label={({name, percent}) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
-                        outerRadius={80}
-                        fill="#8884d8"
-                        dataKey="value"
-                      >
-                        <Cell fill="#10b981" />
-                        <Cell fill="#ef4444" />
-                      </Pie>
-                      <Tooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div>
-                  <div className="metric" style={{ marginBottom: '0.75rem', fontSize: '1.1rem' }}>
-                    <span style={{ fontWeight: 'bold' }}>Hit Rate:</span>
-                    <span style={{
-                      color: cacheStats.hitRate >= 70 ? '#10b981' : cacheStats.hitRate >= 40 ? '#f59e0b' : '#ef4444',
-                      fontWeight: 'bold',
-                      fontSize: '1.3rem'
-                    }}>
-                      {cacheStats.hitRate.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="metric" style={{ marginBottom: '0.5rem' }}>
-                    <span>Total Requests:</span>
-                    <span style={{ fontWeight: 'bold' }}>{cacheStats.total}</span>
-                  </div>
-                  <div className="metric" style={{ marginBottom: '0.5rem' }}>
-                    <span style={{ color: '#10b981' }}>✓ Cache Hits:</span>
-                    <span style={{ fontWeight: 'bold', color: '#10b981' }}>{cacheStats.hits}</span>
-                  </div>
-                  <div className="metric">
-                    <span style={{ color: '#ef4444' }}>✗ Cache Misses:</span>
-                    <span style={{ fontWeight: 'bold', color: '#ef4444' }}>{cacheStats.misses}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* String */}
           <div className="data-type-section">

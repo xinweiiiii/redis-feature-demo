@@ -40,7 +40,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const key = searchParams.get('key');
-    const useCache = searchParams.get('useCache') !== 'false'; // Default to true
 
     if (!key) {
       return NextResponse.json(
@@ -50,46 +49,37 @@ export async function GET(request: NextRequest) {
     }
 
     const client = await getRedisClient();
-    let data = null;
-    let cacheTime = 0;
-    let dbTime = 0;
-    let source = '';
 
-    if (useCache) {
-      // Try cache first
-      const cacheStartTime = performance.now();
-      data = await client.get(key);
-      cacheTime = performance.now() - cacheStartTime;
+    // Always read from both cache and database for comparison
+    // Read from cache
+    const cacheStartTime = performance.now();
+    const cacheData = await client.get(key);
+    const cacheTime = performance.now() - cacheStartTime;
 
-      if (data !== null) {
-        source = 'cache';
-      } else {
-        // Cache miss - read from DB
-        const dbStartTime = performance.now();
-        data = await dbHelpers.getString(key);
-        dbTime = performance.now() - dbStartTime;
-        source = 'database';
+    // Read from database
+    const dbStartTime = performance.now();
+    const dbData = await dbHelpers.getString(key);
+    const dbTime = performance.now() - dbStartTime;
 
-        // Populate cache for next time
-        if (data !== null) {
-          await client.set(key, data);
-        }
-      }
-    } else {
-      // Read directly from database (no cache)
-      const dbStartTime = performance.now();
-      data = await dbHelpers.getString(key);
-      dbTime = performance.now() - dbStartTime;
-      source = 'database';
+    // If cache miss, populate cache for next time
+    if (cacheData === null && dbData !== null) {
+      await client.set(key, dbData);
     }
 
     return NextResponse.json({
-      data,
-      cacheTime,
-      dbTime,
-      totalTime: cacheTime + dbTime,
-      source,
-      fromCache: source === 'cache',
+      cacheResult: {
+        data: cacheData,
+        time: cacheTime,
+        found: cacheData !== null,
+      },
+      dbResult: {
+        data: dbData,
+        time: dbTime,
+        found: dbData !== null,
+      },
+      // For display purposes, use cache data if available, otherwise db data
+      data: cacheData !== null ? cacheData : dbData,
+      speedup: dbTime > 0 && cacheTime > 0 ? dbTime / cacheTime : 0,
     });
   } catch (error) {
     return NextResponse.json(

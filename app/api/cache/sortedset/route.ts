@@ -1,19 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRedisClient } from '@/lib/redis';
+import { dbHelpers } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
     const { key, score, value } = await request.json();
     const client = await getRedisClient();
 
-    const startTime = performance.now();
+    // Write to Redis
+    const cacheStartTime = performance.now();
     await client.zAdd(key, { score, value });
-    const executionTime = performance.now() - startTime;
+    const cacheTime = performance.now() - cacheStartTime;
+
+    // Write to Database
+    const dbStartTime = performance.now();
+    await dbHelpers.addSortedSet(key, value, score);
+    const dbTime = performance.now() - dbStartTime;
 
     return NextResponse.json({
       success: true,
-      message: `Member added to sorted set in ${executionTime.toFixed(2)}ms`,
-      executionTime,
+      message: `Member added to sorted set`,
+      cacheTime,
+      dbTime,
+      executionTime: cacheTime + dbTime,
     });
   } catch (error) {
     return NextResponse.json(
@@ -36,14 +45,37 @@ export async function GET(request: NextRequest) {
     }
 
     const client = await getRedisClient();
-    const startTime = performance.now();
-    const data = await client.zRangeWithScores(key, 0, -1);
-    const executionTime = performance.now() - startTime;
+
+    // Always read from both cache and database for comparison
+    // Read from cache
+    const cacheStartTime = performance.now();
+    const cacheData = await client.zRangeWithScores(key, 0, -1);
+    const cacheTime = performance.now() - cacheStartTime;
+
+    // Read from database
+    const dbStartTime = performance.now();
+    const dbData = await dbHelpers.getSortedSet(key);
+    const dbTime = performance.now() - dbStartTime;
+
+    // If cache miss, populate cache for next time
+    if (cacheData.length === 0 && dbData.length > 0) {
+      await client.zAdd(key, dbData.map(item => ({ score: item.score, value: item.member })));
+    }
 
     return NextResponse.json({
-      data,
-      executionTime,
-      fromCache: data.length > 0,
+      cacheResult: {
+        data: cacheData,
+        time: cacheTime,
+        found: cacheData.length > 0,
+      },
+      dbResult: {
+        data: dbData,
+        time: dbTime,
+        found: dbData.length > 0,
+      },
+      // For display purposes, use cache data if available, otherwise db data
+      data: cacheData.length > 0 ? cacheData : dbData,
+      speedup: dbTime > 0 && cacheTime > 0 ? dbTime / cacheTime : 0,
     });
   } catch (error) {
     return NextResponse.json(
