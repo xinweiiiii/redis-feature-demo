@@ -96,6 +96,9 @@ pm2 startup
 
 # Verify it's running
 pm2 status
+
+# Deldte the PM2 existing tasks
+pm2 delete redis-demo
 ```
 
 ### 4. Access Your Application

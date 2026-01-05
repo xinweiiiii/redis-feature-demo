@@ -200,19 +200,19 @@ export default function SemanticCacheDemoModal({ onClose }: SemanticCacheDemoMod
           {/* Info Section */}
           <div className="search-section" style={{ background: '#e8f5e9', padding: '1rem', borderRadius: '8px' }}>
             <h3 style={{ marginTop: 0, marginBottom: '0.5rem', fontSize: '1rem', color: '#2e7d32' }}>
-              💡 How Semantic Caching Works with GPT-5
+              💡 How Semantic Caching Works with GPT-4
             </h3>
             <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: '1.5' }}>
-              When you ask a question, we create a vector embedding and check if a similar query exists in the cache (≥85% similarity).
-              If found, we return the cached response instantly. Otherwise, we call the <strong>GPT-5</strong> reasoning model, cache the result, and return it.
+              When you ask a question, we create a vector embedding and check if a similar query exists in the cache (≥80% similarity).
+              If found, we return the cached response instantly. Otherwise, we call the <strong>GPT-4</strong> model, cache the result, and return it.
               This saves both <strong>time</strong> and <strong>money</strong> for similar queries!
             </p>
             <p style={{ margin: '0.5rem 0 0 0', fontSize: '0.85rem', color: '#666' }}>
-              <strong>LLM Model:</strong> GPT-5 (Reasoning Model) | <strong>Embedding Model:</strong> text-embedding-3-small
+              <strong>LLM Model:</strong> GPT-4 | <strong>Embedding Model:</strong> text-embedding-3-small
             </p>
             <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#fff3e0', borderRadius: '4px', borderLeft: '3px solid #ff9800' }}>
-              <strong style={{ color: '#e65100' }}>Note:</strong> GPT-5 is a reasoning model that thinks before responding.
-              It uses internal reasoning tokens, which means responses are higher quality but may use more tokens.
+              <strong style={{ color: '#e65100' }}>Note:</strong> The semantic cache uses vector embeddings to find similar queries.
+              Responses are instant and cost $0 when there's a cache hit!
             </div>
           </div>
 
@@ -415,13 +415,13 @@ export default function SemanticCacheDemoModal({ onClose }: SemanticCacheDemoMod
             </h3>
             <ol style={{ margin: 0, paddingLeft: '1.5rem', fontSize: '0.9rem', lineHeight: '1.6' }}>
               <li>Ask "What is Redis?" (This will call OpenAI API - cache miss)</li>
-              <li>Then ask "Explain Redis in simple terms" (This should hit the cache! ≥85% similarity)</li>
+              <li>Then ask "Explain Redis in simple terms" (This should hit the cache! ≥80% similarity)</li>
               <li>Try "How does Redis work?" (Another similar query that should hit cache)</li>
               <li>Compare the response time and cost difference (cache hits = $0.0000, instant response)</li>
               <li>Try disabling cache to see all queries call the API</li>
             </ol>
             <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: '#fff3e0', borderRadius: '4px', borderLeft: '3px solid #ff9800' }}>
-              <strong style={{ color: '#e65100' }}>Note:</strong> Similarity threshold is set to 85%. Even semantically similar questions
+              <strong style={{ color: '#e65100' }}>Note:</strong> Similarity threshold is set to 80%. Even semantically similar questions
               with different wording will trigger cache hits if they're asking the same thing!
             </div>
           </div>

@@ -3,7 +3,7 @@ import { getRedisClient } from '@/lib/redis';
 import { createEmbedding, createChatCompletion, cosineSimilarity, calculateCost } from '@/lib/openai';
 
 const CACHE_KEY_PREFIX = 'semantic-cache:';
-const SIMILARITY_THRESHOLD = 0.85; // 85% similarity to consider a cache hit (semantic similarity)
+const SIMILARITY_THRESHOLD = 0.80; // 80% similarity to consider a cache hit (semantic similarity)
 
 export async function POST(request: NextRequest) {
   try {
