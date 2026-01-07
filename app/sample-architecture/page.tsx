@@ -4,6 +4,10 @@ import Link from 'next/link';
 import CacheArchitectureCard from '@/components/CacheArchitectureCard';
 import InMemoryDatabaseArchitectureCard from '@/components/InMemoryDatabaseArchitectureCard';
 import MessageInterserviceArchitectureCard from '@/components/MessageInterserviceArchitectureCard';
+import QueryEngineArchitectureCard from '@/components/QueryEngineArchitectureCard';
+import SessionManagementArchitectureCard from '@/components/SessionManagementArchitectureCard';
+import RateLimitingArchitectureCard from '@/components/RateLimitingArchitectureCard';
+import VectorDatabaseArchitectureCard from '@/components/VectorDatabaseArchitectureCard';
 
 export default function SampleArchitecturePage() {
   return (
@@ -22,6 +26,10 @@ export default function SampleArchitecturePage() {
         <CacheArchitectureCard />
         <InMemoryDatabaseArchitectureCard />
         <MessageInterserviceArchitectureCard />
+        <QueryEngineArchitectureCard />
+        <SessionManagementArchitectureCard />
+        <RateLimitingArchitectureCard />
+        <VectorDatabaseArchitectureCard />
       </div>
     </div>
   );
