@@ -27,6 +27,18 @@ export default function Home() {
         </div>
       </div>
 
+      <div className="sample-architecture-banner">
+        <div className="sample-architecture-banner-content">
+          <div className="sample-architecture-banner-text">
+            <h2>Redis Enterprise Sample Architecture</h2>
+            <p>Explore real-world architecture patterns and reference implementations</p>
+          </div>
+          <Link href="/sample-architecture" className="sample-architecture-button">
+            View Sample Architecture →
+          </Link>
+        </div>
+      </div>
+
       <div className="cards-grid">
         <CachingDemoCard />
         <PubSubDemoCard />

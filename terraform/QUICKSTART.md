@@ -84,6 +84,9 @@ npm install
 # Build the application
 npm run build
 
+# Install PM2
+npm install -g pm2
+
 # Start with PM2
 pm2 start npm --name redis-demo -- start
 
