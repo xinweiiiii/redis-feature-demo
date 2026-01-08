@@ -8,7 +8,7 @@ export async function GET(_request: NextRequest) {
     // Check if the search index exists and has documents
     try {
       const indexInfo = await client.ft.info('idx:products');
-      const numDocs = indexInfo.numDocs;
+      const numDocs = Number(indexInfo.numDocs);
 
       return NextResponse.json({
         initialized: numDocs > 0,
