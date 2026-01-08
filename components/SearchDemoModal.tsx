@@ -20,6 +20,9 @@ interface SearchResult {
   category: string;
   price?: number;
   distance?: number;
+  similarity?: string;
+  hybridScore?: string;
+  textMatch?: boolean;
 }
 
 interface Location {
@@ -58,6 +61,7 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [activeTab, setActiveTab] = useState<'fulltext' | 'semantic' | 'hybrid' | 'geo'>('fulltext');
   const [initialized, setInitialized] = useState(false);
+  const [checkingData, setCheckingData] = useState(true);
   const [redisCommand, setRedisCommand] = useState('');
 
   // Search states
@@ -73,10 +77,27 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
   const [searchResults_Geo, setSearchResults_Geo] = useState<SearchResult_Geo[]>([]);
   const [distanceCalc, setDistanceCalc] = useState({ from: '', to: '', result: '' });
 
-  // Load geospatial locations
+  // Check if data is already initialized
   useEffect(() => {
+    checkInitialization();
     loadGeoLocations();
   }, []);
+
+  const checkInitialization = async () => {
+    setCheckingData(true);
+    try {
+      const response = await fetch('/api/search/check');
+      const data = await response.json();
+      if (data.initialized) {
+        setInitialized(true);
+        // Don't show success message on initial load, only when user asks
+      }
+    } catch (error) {
+      console.error('Error checking initialization:', error);
+    } finally {
+      setCheckingData(false);
+    }
+  };
 
   const loadGeoLocations = async () => {
     try {
@@ -411,7 +432,15 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
   });
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className="modal-overlay"
+      onClick={(e) => {
+        // Only close if clicking directly on the overlay, not its children
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+    >
       <div
         {...modalProps}
         className="modal-content search-modal"
@@ -431,7 +460,13 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
           )}
 
           {/* Initialize Data */}
-          {!initialized && (
+          {checkingData ? (
+            <div className="search-section">
+              <div className="init-warning">
+                <p>🔍 Checking for existing data...</p>
+              </div>
+            </div>
+          ) : !initialized ? (
             <div className="search-section">
               <div className="init-warning">
                 <p>⚠️ Initialize sample data first to test search features</p>
@@ -440,7 +475,7 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
                 </button>
               </div>
             </div>
-          )}
+          ) : null}
 
           {/* Search Type Tabs */}
           <div className="search-section">
@@ -714,10 +749,25 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
                 {results.map((result, index) => (
                   <div key={index} className="result-item">
                     <div className="result-header">
-                      <h4>{result.name}</h4>
+                      <h4>
+                        {result.name}
+                        {result.textMatch && activeTab === 'hybrid' && (
+                          <span style={{ marginLeft: '8px', fontSize: '0.8em', color: '#4CAF50' }}>✓ Text Match</span>
+                        )}
+                      </h4>
                       <div className="result-badges">
                         <span className="badge category">{result.category}</span>
                         {result.price && <span className="badge price">${result.price}</span>}
+                        {result.hybridScore && activeTab === 'hybrid' && (
+                          <span className="badge" style={{ backgroundColor: '#673AB7' }}>
+                            Score: {result.hybridScore}
+                          </span>
+                        )}
+                        {result.similarity && activeTab === 'semantic' && (
+                          <span className="badge" style={{ backgroundColor: '#2196F3' }}>
+                            Similarity: {result.similarity}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <p className="result-description">{result.description}</p>
