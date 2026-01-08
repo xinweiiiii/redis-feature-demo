@@ -667,9 +667,9 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
                   {activeTab === 'hybrid' && 'Hybrid Search'}
                 </h3>
                 <p className="section-description">
-                  {activeTab === 'fulltext' && 'Search products by name or description using keyword matching'}
-                  {activeTab === 'semantic' && 'Find products by semantic similarity using vector embeddings'}
-                  {activeTab === 'hybrid' && 'Combine full-text and vector search for best results'}
+                  {activeTab === 'fulltext' && 'Search products by exact name or description keywords. Try "laptop" to find exact matches.'}
+                  {activeTab === 'semantic' && 'Find products by meaning - try "portable computer" to find laptops, ultrabooks, notebooks, etc. even without exact keywords.'}
+                  {activeTab === 'hybrid' && 'Best of both worlds: semantic understanding + exact matching. Try "portable computer MacBook" to find all laptops but rank MacBook higher.'}
                 </p>
                 <div className="search-form">
                   <input
@@ -678,10 +678,10 @@ export default function SearchDemoModal({ onClose }: SearchDemoModalProps) {
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder={
                       activeTab === 'fulltext'
-                        ? 'e.g., laptop, headphones, coffee'
+                        ? 'e.g., laptop, headphones, coffee maker'
                         : activeTab === 'semantic'
-                        ? 'e.g., something for exercise, work from home'
-                        : 'e.g., wireless headphones, smart home'
+                        ? 'e.g., portable computer, athletic footwear, brewing equipment'
+                        : 'e.g., portable computer MacBook, professional running shoes'
                     }
                     disabled={loading || !initialized}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
