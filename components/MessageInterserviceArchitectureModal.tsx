@@ -121,7 +121,7 @@ const slides: Slide[] = [
       },
       {
         type: "image",
-        imageSrc: "/cache/pubsub.png",
+        imageSrc: "/cache/pub-sub.png",
         imageAlt:
           "Pub/Sub architecture diagram showing publishers sending messages to topics through a broker, which routes to subscribers",
       },
