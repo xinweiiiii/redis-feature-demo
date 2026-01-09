@@ -404,7 +404,7 @@ export default function DashboardPage() {
                     />
                     <Tooltip
                       labelFormatter={formatTimestamp}
-                      formatter={(value: number) => formatBytes(value)}
+                      formatter={(value: number | undefined) => value !== undefined ? formatBytes(value) : ''}
                       contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid #e0e0e0' }}
                     />
                     <Legend />
@@ -466,7 +466,7 @@ export default function DashboardPage() {
                     />
                     <Tooltip
                       labelFormatter={formatTimestamp}
-                      formatter={(value: number) => `${value.toFixed(2)}%`}
+                      formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(2)}%` : ''}
                       contentStyle={{ backgroundColor: 'var(--card-bg)', border: '1px solid #e0e0e0' }}
                     />
                     <Legend />
