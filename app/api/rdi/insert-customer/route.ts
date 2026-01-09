@@ -25,49 +25,69 @@ export async function POST(request: NextRequest) {
     const pgInsertTime = (performance.now() - pgStartTime).toFixed(2);
 
     console.log('✓ Customer inserted into PostgreSQL:', customer);
+    console.log(`✓ PostgreSQL write time: ${pgInsertTime}ms`);
 
-    // STEP 2: RDI detects the change via CDC and syncs to Redis
+    // STEP 2: Wait for RDI to sync via CDC (may take a moment)
     console.log('\n========================================');
-    console.log('STEP 2: RDI detecting INSERT and syncing to Redis (Target Cache)...');
+    console.log('STEP 2: Waiting for RDI to sync to Redis via CDC...');
     console.log('========================================');
 
     const redis = await getRedisClient();
-    const rdiStartTime = performance.now();
+    let synced = false;
+    let attempts = 0;
+    let syncedKey = '';
+    const maxAttempts = 10;
 
-    // RDI syncs customer data to Redis as a hash
-    const redisKey = `customer:${customer.id}`;
-    const redisData = {
-      id: customer.id.toString(),
-      name: customer.name,
-      email: customer.email,
-      country: customer.country || '',
-      created_at: customer.created_at.toISOString(),
-    };
-    console.log(`RDI syncing: Creating hash ${redisKey}`, redisData);
-    await redis.hSet(redisKey, redisData);
-    console.log('✓ RDI synced: Customer hash created in Redis');
+    // Poll Redis to check if data has been synced
+    // RDI creates keys in format: customers:id:{id}:email:{email}
+    while (!synced && attempts < maxAttempts) {
+      attempts++;
 
-    // RDI also maintains the timeline sorted set for chronological access
-    await redis.zAdd('customers:timeline', {
-      score: customer.created_at.getTime(),
-      value: customer.id.toString(),
-    });
-    console.log(`✓ RDI synced: Added to timeline (score: ${customer.created_at.getTime()})`);
+      // Scan for key matching the pattern
+      const keys = await redis.keys(`customers:id:${customer.id}:*`);
 
-    const rdiSyncTime = (performance.now() - rdiStartTime).toFixed(2);
+      if (keys.length > 0) {
+        synced = true;
+        syncedKey = keys[0];
+        console.log(`✓ RDI sync detected after ${attempts} attempt(s)`);
+        console.log(`✓ Key created: ${syncedKey}`);
+      } else {
+        console.log(`Waiting for sync... (attempt ${attempts}/${maxAttempts})`);
+        await new Promise(resolve => setTimeout(resolve, 100)); // Wait 100ms
+      }
+    }
 
+    if (!synced) {
+      console.log('⚠ Warning: Data not yet synced to Redis (CDC may take longer)');
+    }
+
+    // STEP 3: Read from Redis to verify sync and measure read performance
     console.log('\n========================================');
-    console.log('✓ RDI SYNC COMPLETE');
+    console.log('STEP 3: Reading customer data from Redis...');
+    console.log('========================================');
+
+    const redisStartTime = performance.now();
+    let redisData = {};
+
+    if (syncedKey) {
+      redisData = await redis.hGetAll(syncedKey);
+    }
+
+    const redisReadTime = (performance.now() - redisStartTime).toFixed(2);
+
+    console.log('✓ Customer data read from Redis:', redisData);
+    console.log(`✓ Redis read time: ${redisReadTime}ms`);
     console.log('========================================\n');
 
     return NextResponse.json({
       success: true,
       customer,
-      message: 'Customer inserted into PostgreSQL and automatically synced to Redis via RDI',
+      message: 'Customer inserted into PostgreSQL and synced to Redis via RDI',
+      synced: synced,
       metrics: {
-        postgresInsertTime: parseFloat(pgInsertTime),
-        rdiSyncTime: parseFloat(rdiSyncTime),
-        totalTime: parseFloat(pgInsertTime) + parseFloat(rdiSyncTime)
+        postgresWriteTime: parseFloat(pgInsertTime),
+        redisReadTime: parseFloat(redisReadTime),
+        syncAttempts: attempts
       }
     });
   } catch (error: any) {

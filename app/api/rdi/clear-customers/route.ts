@@ -1,9 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { customerHelpers } from '@/lib/postgres';
 import { getRedisClient } from '@/lib/redis';
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   try {
+    const redis = await getRedisClient();
+
     // STEP 1: Delete from PostgreSQL (Source Database)
     console.log('========================================');
     console.log('STEP 1: Deleting customers from PostgreSQL (Source Database)...');
@@ -19,53 +21,42 @@ export async function POST(request: NextRequest) {
     const pgCount = await customerHelpers.getCustomersCount();
     console.log(`✓ PostgreSQL customers remaining: ${pgCount}`);
 
-    // STEP 2: RDI simulates Change Data Capture (CDC) and syncs to Redis
+    // STEP 2: Manually clean up Redis (RDI may not handle bulk deletes immediately)
     console.log('\n========================================');
-    console.log('STEP 2: RDI detecting changes and syncing to Redis (Target Cache)...');
+    console.log('STEP 2: Cleaning up Redis cache...');
     console.log('========================================');
 
-    const redis = await getRedisClient();
-    const rdiStartTime = performance.now();
+    const redisStartTime = performance.now();
+    const customerKeys = await redis.keys('customers:id:*');
+    const count = customerKeys.length;
 
-    // Get all customer IDs from Redis timeline
-    const customerIds = await redis.zRange('customers:timeline', 0, -1);
-    const count = customerIds.length;
-    console.log(`RDI detected ${count} customers to remove from Redis`);
-
-    // RDI propagates deletions to Redis
-    if (customerIds.length > 0) {
-      console.log(`RDI syncing: Deleting ${customerIds.length} customer hashes from Redis...`);
-      const deletePromises = customerIds.map((id) => redis.del(`customer:${id}`));
-      const deletedHashes = await Promise.all(deletePromises);
-      console.log(`✓ RDI synced: Deleted ${deletedHashes.reduce((a, b) => a + b, 0)} customer hashes`);
+    if (customerKeys.length > 0) {
+      console.log(`Deleting ${customerKeys.length} customer keys from Redis...`);
+      await Promise.all(customerKeys.map(key => redis.del(key)));
+      console.log(`✓ Deleted ${count} keys from Redis`);
+    } else {
+      console.log('✓ No customer keys found in Redis');
     }
 
-    // RDI deletes the timeline sorted set
-    const timelineDeleted = await redis.del('customers:timeline');
-    console.log(`✓ RDI synced: Timeline sorted set deleted`);
-
-    const rdiSyncTime = (performance.now() - rdiStartTime).toFixed(2);
+    const redisDeleteTime = (performance.now() - redisStartTime).toFixed(2);
 
     // Verify Redis deletion
-    const remainingIds = await redis.zRange('customers:timeline', 0, -1);
-    console.log(`✓ Redis customers remaining: ${remainingIds.length}`);
-
-    console.log('\n========================================');
-    console.log('✓ RDI SYNC COMPLETE');
+    const remainingKeys = await redis.keys('customers:id:*');
+    console.log(`✓ Redis customers remaining: ${remainingKeys.length}`);
     console.log('========================================\n');
 
     return NextResponse.json({
       success: true,
-      message: 'Customers deleted from PostgreSQL and automatically synced to Redis via RDI',
+      message: 'Customers deleted from PostgreSQL and Redis',
       deletedCount: count,
       metrics: {
         postgresDeleteTime: parseFloat(pgDeleteTime),
-        rdiSyncTime: parseFloat(rdiSyncTime),
-        totalTime: parseFloat(pgDeleteTime) + parseFloat(rdiSyncTime)
+        redisDeleteTime: parseFloat(redisDeleteTime),
+        totalTime: parseFloat(pgDeleteTime) + parseFloat(redisDeleteTime)
       },
       verification: {
         postgresRemaining: pgCount,
-        redisRemaining: remainingIds.length
+        redisRemaining: remainingKeys.length
       }
     });
   } catch (error: any) {

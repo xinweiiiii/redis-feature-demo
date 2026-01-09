@@ -39,6 +39,18 @@ export default function Home() {
         </div>
       </div>
 
+      <div className="infrastructure-banner">
+        <div className="infrastructure-banner-content">
+          <div className="infrastructure-banner-text">
+            <h2>Redis Metrics Dashboard</h2>
+            <p>Monitor real-time Redis performance, memory usage, and cache statistics</p>
+          </div>
+          <Link href="/dashboard" className="infrastructure-button">
+            View Dashboard →
+          </Link>
+        </div>
+      </div>
+
       <div className="cards-grid">
         <CachingDemoCard />
         <PubSubDemoCard />
