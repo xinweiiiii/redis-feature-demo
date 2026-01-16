@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import L from 'leaflet';
-import 'leaflet.heat';
+import L from "leaflet";
+import { heatLayer } from "@linkurious/leaflet-heat";
 
 interface Location {
   name: string;
@@ -26,7 +26,7 @@ interface GeoMapProps {
 
 export default function GeoMap({ locations, searchCenter, searchRadius, searchResults }: GeoMapProps) {
   const mapRef = useRef<L.Map | null>(null);
-  const heatLayerRef = useRef<L.HeatLayer | null>(null);
+  const heatLayerRef = useRef<any>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const searchLayerRef = useRef<L.LayerGroup | null>(null);
 
@@ -93,19 +93,18 @@ export default function GeoMap({ locations, searchCenter, searchRadius, searchRe
       mapRef.current.removeLayer(heatLayerRef.current);
     }
 
-    heatLayerRef.current = (L as any).heatLayer(heatPoints, {
+    heatLayerRef.current = heatLayer(heatPoints, {
       radius: 25,
       blur: 15,
       maxZoom: 17,
       max: 1.0,
       gradient: {
-        0.0: 'blue',
-        0.5: 'lime',
-        0.7: 'yellow',
-        1.0: 'red',
+        0.0: "blue",
+        0.5: "lime",
+        0.7: "yellow",
+        1.0: "red",
       },
     }).addTo(mapRef.current);
-
     // Fit bounds to show all locations
     if (locations.length > 0) {
       const bounds = L.latLngBounds(locations.map(loc => [loc.latitude, loc.longitude]));
