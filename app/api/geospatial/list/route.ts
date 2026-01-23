@@ -12,17 +12,18 @@ export async function GET() {
       return NextResponse.json({ locations: [] });
     }
 
-    // Get positions for all members
-    const positions = await redis.geoPos('locations', members);
+    // Get positions for all members using sendCommand
+    const positions = await redis.sendCommand(['GEOPOS', 'locations', ...members]) as any;
 
     // Combine members with their positions
+    // GEOPOS returns array of [longitude, latitude] pairs or null for each member
     const locations = members.map((name, index) => {
       const pos = positions[index];
-      return pos
+      return pos && Array.isArray(pos) && pos.length === 2
         ? {
             name,
-            latitude: parseFloat(pos.latitude),
-            longitude: parseFloat(pos.longitude),
+            longitude: parseFloat(pos[0]),
+            latitude: parseFloat(pos[1]),
           }
         : null;
     }).filter(loc => loc !== null);

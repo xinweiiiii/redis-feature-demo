@@ -16,8 +16,14 @@ export async function POST(request: NextRequest) {
 
     const redis = await getRedisClient();
 
-    // Calculate distance between two locations
-    const distanceResult = await redis.geoDist('locations', from, to, 'km');
+    // Calculate distance between two locations using sendCommand
+    const distanceResult = await redis.sendCommand([
+      'GEODIST',
+      'locations',
+      from,
+      to,
+      'km'
+    ]) as any;
 
     if (distanceResult === null) {
       return NextResponse.json(
@@ -31,7 +37,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       from,
       to,
-      distance: parseFloat(distanceResult as any),
+      distance: parseFloat(distanceResult),
       executionTime,
     });
   } catch (error) {
