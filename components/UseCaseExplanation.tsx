@@ -10,7 +10,7 @@ interface UseCaseData {
     characteristics: string[];
     benchmarks?: string[];
   };
-  tradeoffs: {
+  tradeoffs?: {
     pros: string[];
     cons: string[];
   };
@@ -28,6 +28,7 @@ export default function UseCaseExplanation({
   defaultOpen = false
 }: UseCaseExplanationProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const tradeoffs = data.tradeoffs;
 
   return (
     <div className="use-case-panel">
@@ -109,8 +110,7 @@ export default function UseCaseExplanation({
           </div>
 
           {/* Trade-offs */}
-          {(data.tradeoffs?.pros?.length > 0 ||
-            data.tradeoffs?.cons?.length > 0) && (
+          {(tradeoffs?.pros?.length || tradeoffs?.cons?.length) && (
             <div className="use-case-section">
               <h4 className="use-case-section-title">
                 <span className="section-icon">⚖️</span>
@@ -118,22 +118,22 @@ export default function UseCaseExplanation({
               </h4>
 
               <div className="tradeoffs-grid">
-                {data.tradeoffs?.pros?.length > 0 && (
+                {tradeoffs?.pros?.length > 0 && (
                   <div className="tradeoff-column pros">
                     <h5>Pros</h5>
                     <ul className="use-case-list">
-                      {data.tradeoffs.pros.map((pro, index) => (
+                      {tradeoffs.pros.map((pro, index) => (
                         <li key={index}>{pro}</li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                {data.tradeoffs?.cons?.length > 0 && (
+                {tradeoffs?.cons?.length > 0 && (
                   <div className="tradeoff-column cons">
                     <h5>Cons</h5>
                     <ul className="use-case-list">
-                      {data.tradeoffs.cons.map((con, index) => (
+                      {tradeoffs.cons.map((con, index) => (
                         <li key={index}>{con}</li>
                       ))}
                     </ul>
