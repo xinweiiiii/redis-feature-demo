@@ -115,7 +115,7 @@ const slides: Slide[] = [
     content: [
       {
         type: "text",
-        text: "Full-text search is an information retrieval technique that searches documents based on keywords or phrases within the entire text. Unlike traditional search, it considers context, synonyms, and word proximity for more relevant results.",
+        text: "Full-text search is an information retrieval technique that searches documents based on keywords or phrases within the entire text.",
       },
       {
         type: "text",

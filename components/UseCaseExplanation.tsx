@@ -40,9 +40,7 @@ export default function UseCaseExplanation({
           <span className="use-case-icon">📚</span>
           {title}
         </h3>
-        <span className={`use-case-arrow ${isOpen ? 'open' : ''}`}>
-          ▼
-        </span>
+        <span className={`use-case-arrow ${isOpen ? "open" : ""}`}>▼</span>
       </button>
 
       {isOpen && (
@@ -97,43 +95,53 @@ export default function UseCaseExplanation({
                 <li key={index}>{item}</li>
               ))}
             </ul>
-            {data.performance.benchmarks && data.performance.benchmarks.length > 0 && (
-              <div className="benchmarks">
-                <strong>Benchmarks:</strong>
-                <ul className="use-case-list">
-                  {data.performance.benchmarks.map((benchmark, index) => (
-                    <li key={index}>{benchmark}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            {data.performance.benchmarks &&
+              data.performance.benchmarks.length > 0 && (
+                <div className="benchmarks">
+                  <strong>Benchmarks:</strong>
+                  <ul className="use-case-list">
+                    {data.performance.benchmarks.map((benchmark, index) => (
+                      <li key={index}>{benchmark}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
           </div>
 
           {/* Trade-offs */}
-          <div className="use-case-section">
-            <h4 className="use-case-section-title">
-              <span className="section-icon">⚖️</span>
-              Trade-offs & Limitations
-            </h4>
-            <div className="tradeoffs-grid">
-              <div className="tradeoff-column pros">
-                <h5>Pros</h5>
-                <ul className="use-case-list">
-                  {data.tradeoffs.pros.map((pro, index) => (
-                    <li key={index}>{pro}</li>
-                  ))}
-                </ul>
-              </div>
-              <div className="tradeoff-column cons">
-                <h5>Cons</h5>
-                <ul className="use-case-list">
-                  {data.tradeoffs.cons.map((con, index) => (
-                    <li key={index}>{con}</li>
-                  ))}
-                </ul>
+          {(data.tradeoffs?.pros?.length > 0 ||
+            data.tradeoffs?.cons?.length > 0) && (
+            <div className="use-case-section">
+              <h4 className="use-case-section-title">
+                <span className="section-icon">⚖️</span>
+                Trade-offs & Limitations
+              </h4>
+
+              <div className="tradeoffs-grid">
+                {data.tradeoffs?.pros?.length > 0 && (
+                  <div className="tradeoff-column pros">
+                    <h5>Pros</h5>
+                    <ul className="use-case-list">
+                      {data.tradeoffs.pros.map((pro, index) => (
+                        <li key={index}>{pro}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {data.tradeoffs?.cons?.length > 0 && (
+                  <div className="tradeoff-column cons">
+                    <h5>Cons</h5>
+                    <ul className="use-case-list">
+                      {data.tradeoffs.cons.map((con, index) => (
+                        <li key={index}>{con}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

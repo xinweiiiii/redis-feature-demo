@@ -660,20 +660,6 @@ export default function StreamDemoModal({ onClose }: StreamDemoModalProps) {
           {activeTab === 'multiple' && (
             <>
               <div className="search-section">
-                <h3>Setup Consumer Group</h3>
-                <p className="section-description">
-                  Create a consumer group to enable multiple consumers
-                </p>
-                <button
-                  className="primary"
-                  onClick={createConsumerGroup}
-                  disabled={loading}
-                >
-                  Create Consumer Group
-                </button>
-              </div>
-
-              <div className="search-section">
                 <h3>Producer: Add Message</h3>
                 <p className="section-description">
                   Add messages that will be distributed across consumers

@@ -367,7 +367,7 @@ export default function CachingDemoModal({ onClose }: CachingDemoModalProps) {
                   <div>
                     <strong style={{ color: '#92400e', fontSize: '0.875rem' }}>How it works:</strong>
                     <p style={{ color: '#78350f', margin: '0.25rem 0 0 0', fontSize: '0.875rem', lineHeight: '1.5' }}>
-                      Every read operation queries both Redis (cache) and PostgreSQL (database) simultaneously. First read after write will be a cache miss, then Redis automatically populates the cache for subsequent reads.
+                      Every read operation queries both Redis (cache) and PostgreSQL (database) simultaneously. You can see the performance difference when reading from Postgre vs Redis.
                     </p>
                   </div>
                 </div>

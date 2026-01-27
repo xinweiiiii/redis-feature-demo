@@ -99,24 +99,6 @@ export const pubsubUseCases = {
       'Supports 10K+ concurrent subscribers per channel',
       'Memory: minimal (no message storage)'
     ]
-  },
-  tradeoffs: {
-    pros: [
-      'Extremely low latency',
-      'Simple publish-subscribe pattern',
-      'No message storage overhead',
-      'Pattern-based subscriptions',
-      'Scales horizontally',
-      'Built-in message broadcasting'
-    ],
-    cons: [
-      'No message persistence',
-      'No delivery guarantees',
-      'Messages lost if no subscribers',
-      'No message replay capability',
-      'No built-in acknowledgments',
-      'Limited to Redis single instance (use Redis Cluster for HA)'
-    ]
   }
 };
 
@@ -407,24 +389,6 @@ export const sessionUseCases = {
       'Memory: ~1-5KB per session (varies by data)',
       'Scales horizontally with Redis Cluster',
       'Negligible overhead vs in-memory storage'
-    ]
-  },
-  tradeoffs: {
-    pros: [
-      'Extremely fast access',
-      'Automatic expiration with TTL',
-      'Shared across multiple servers',
-      'Atomic operations',
-      'Simple key-value model',
-      'Built-in serialization support'
-    ],
-    cons: [
-      'Limited by available RAM',
-      'Data loss on Redis restart (unless persistence)',
-      'Not suitable for audit logs',
-      'Limited query capabilities',
-      'Potential single point of failure',
-      'Cost scales with memory usage'
     ]
   }
 };
