@@ -11,6 +11,7 @@ import SemanticCacheDemoCard from '@/components/SemanticCacheDemoCard'
 import FeatureStoreDemoCard from '@/components/FeatureStoreDemoCard'
 import ProbabilisticDemoCard from '@/components/ProbabilisticDemoCard'
 import RDIDemoCard from '@/components/RDIDemoCard'
+import EcommerceChatCard from '@/components/EcommerceChatCard'
 
 export default function Home() {
   return (
@@ -64,6 +65,7 @@ export default function Home() {
         <FeatureStoreDemoCard />
         <ProbabilisticDemoCard />
         <RDIDemoCard />
+        <EcommerceChatCard />
       </div>
     </div>
   );
